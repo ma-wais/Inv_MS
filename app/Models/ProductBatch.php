@@ -21,4 +21,9 @@ class ProductBatch extends Model
             'expires_at' => 'date',
         ];
     }
+
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
 }

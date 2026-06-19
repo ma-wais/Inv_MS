@@ -8,3 +8,106 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@media print {
+    body {
+        background-color: white !important;
+        color: #0f172a !important;
+    }
+    
+    /* Hide navigation sidebar, top header, buttons, inputs, and elements marked as print:hidden */
+    aside, header, button, select, input, .print\:hidden {
+        display: none !important;
+    }
+    
+    /* Reset main layout padding/margin */
+    .lg\:pl-64 {
+        padding-left: 0 !important;
+    }
+    main, .p-5, .lg\:p-8, .p-6, .p-5 {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Force full width on print containers and remove border boxes */
+    .max-w-6xl, .max-w-4xl, .mx-auto, .rounded-2xl, .bg-white {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Professional tables styling for printing */
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 15px !important;
+    }
+    
+    thead {
+        display: table-header-group !important;
+    }
+    
+    tr {
+        page-break-inside: avoid !important;
+    }
+    
+    th {
+        border-bottom: 2px solid #475569 !important;
+        color: #1e293b !important;
+        font-weight: bold !important;
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        text-transform: uppercase !important;
+    }
+    
+    td {
+        border-bottom: 1px solid #e2e8f0 !important;
+        padding: 8px 4px !important;
+        color: #334155 !important;
+        font-size: 11px !important;
+    }
+    
+    /* Force black borders on total columns */
+    tr.border-t-2 {
+        border-top: 2px solid #0f172a !important;
+    }
+    
+    /* Page settings for clean A4 printing */
+    @page {
+        size: A4;
+        margin: 15mm 12mm 15mm 12mm;
+    }
+    
+    /* Exclude card background colors, borders, and shadows to prevent gray blocks */
+    .bg-slate-50, .bg-slate-100, .bg-slate-200, .bg-emerald-50, .bg-red-50, .bg-amber-50, .bg-emerald-50\/30 {
+        background-color: transparent !important;
+        background: transparent !important;
+    }
+    
+    .shadow-sm, .shadow-md, .shadow-lg, .shadow-xs, .shadow-xl {
+        box-shadow: none !important;
+    }
+    
+    .border, .border-slate-200, .border-emerald-100, .border-red-100, .border-slate-100 {
+        border: none !important;
+    }
+    
+    /* Grid adjustments for cards */
+    .grid {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 15px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .grid > div {
+        flex: 1 !important;
+        padding: 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+    }
+}

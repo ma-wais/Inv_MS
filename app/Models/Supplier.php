@@ -44,7 +44,7 @@ class Supplier extends Model
     {
         return (float) $this->opening_balance
             + (float) $this->purchases()->where('status', Purchase::STATUS_POSTED)->sum('grand_total')
-            + (float) $this->returns()->where('status', 'posted')->sum('total')
+            - (float) $this->returns()->where('status', 'posted')->sum('total')
             - (float) $this->payments()->sum('amount');
     }
 

@@ -153,13 +153,13 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        collect([
+        $parentAccounts = collect([
             ['1000', 'Assets', Account::TYPE_ASSET, 'debit'],
             ['2000', 'Liabilities', Account::TYPE_LIABILITY, 'credit'],
             ['3000', 'Equity', Account::TYPE_EQUITY, 'credit'],
             ['4000', 'Income', Account::TYPE_INCOME, 'credit'],
             ['5000', 'Expenses', Account::TYPE_EXPENSE, 'debit'],
-        ])->each(fn (array $account) => $tenant->accounts()->updateOrCreate(
+        ])->map(fn (array $account) => $tenant->accounts()->updateOrCreate(
             ['code' => $account[0]],
             [
                 'name' => $account[1],
@@ -168,5 +168,67 @@ class DatabaseSeeder extends Seeder
                 'is_system' => true,
             ],
         ));
+
+        $assets = $parentAccounts->firstWhere('code', '1000');
+        $liabilities = $parentAccounts->firstWhere('code', '2000');
+        $income = $parentAccounts->firstWhere('code', '4000');
+        $expenses = $parentAccounts->firstWhere('code', '5000');
+
+        $tenant->accounts()->updateOrCreate(['code' => '1100'], [
+            'parent_id' => $assets->id,
+            'name' => 'Cash on Hand',
+            'type' => Account::TYPE_ASSET,
+            'normal_balance' => 'debit',
+            'is_system' => true,
+        ]);
+        $tenant->accounts()->updateOrCreate(['code' => '1200'], [
+            'parent_id' => $assets->id,
+            'name' => 'Bank Account',
+            'type' => Account::TYPE_ASSET,
+            'normal_balance' => 'debit',
+            'is_system' => true,
+        ]);
+        $tenant->accounts()->updateOrCreate(['code' => '1300'], [
+            'parent_id' => $assets->id,
+            'name' => 'Accounts Receivable',
+            'type' => Account::TYPE_ASSET,
+            'normal_balance' => 'debit',
+            'is_system' => true,
+        ]);
+        $tenant->accounts()->updateOrCreate(['code' => '1400'], [
+            'parent_id' => $assets->id,
+            'name' => 'Inventory',
+            'type' => Account::TYPE_ASSET,
+            'normal_balance' => 'debit',
+            'is_system' => true,
+        ]);
+        $tenant->accounts()->updateOrCreate(['code' => '2100'], [
+            'parent_id' => $liabilities->id,
+            'name' => 'Accounts Payable',
+            'type' => Account::TYPE_LIABILITY,
+            'normal_balance' => 'credit',
+            'is_system' => true,
+        ]);
+        $tenant->accounts()->updateOrCreate(['code' => '4100'], [
+            'parent_id' => $income->id,
+            'name' => 'Sales Revenue',
+            'type' => Account::TYPE_INCOME,
+            'normal_balance' => 'credit',
+            'is_system' => true,
+        ]);
+        $tenant->accounts()->updateOrCreate(['code' => '5100'], [
+            'parent_id' => $expenses->id,
+            'name' => 'Cost of Goods Sold',
+            'type' => Account::TYPE_EXPENSE,
+            'normal_balance' => 'debit',
+            'is_system' => true,
+        ]);
+        $tenant->accounts()->updateOrCreate(['code' => '5200'], [
+            'parent_id' => $expenses->id,
+            'name' => 'Operating Expenses',
+            'type' => Account::TYPE_EXPENSE,
+            'normal_balance' => 'debit',
+            'is_system' => true,
+        ]);
     }
 }

@@ -23,6 +23,7 @@ class PurchaseService
         private readonly TenantContext $tenantContext,
         private readonly DocumentNumberService $documentNumbers,
         private readonly StockMovementService $stockMovements,
+        private readonly \App\Services\Accounting\AutomaticPostingService $postings,
     ) {}
 
     public function create(array $data, array $items): Purchase
@@ -148,6 +149,8 @@ class PurchaseService
                 'posted_at' => now(),
             ]);
 
+            $this->postings->postPurchase($purchase);
+
             return $purchase->refresh();
         });
     }
@@ -183,6 +186,8 @@ class PurchaseService
             if ($purchase) {
                 $purchase->increment('paid_total', $amount);
             }
+
+            $this->postings->postPurchasePayment($payment);
 
             return $payment;
         });
@@ -255,6 +260,8 @@ class PurchaseService
             }
 
             $return->update(['total' => round($total, 4)]);
+
+            $this->postings->postPurchaseReturn($return);
 
             return $return->refresh();
         });

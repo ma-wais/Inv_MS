@@ -1,20 +1,39 @@
 import { Link, router, usePage } from '@inertiajs/react';
 
-const navigation = [
-    { label: 'Dashboard', href: '/dashboard', active: true },
-    { label: 'Products', href: '/products' },
-    { label: 'Inventory setup', href: '/inventory/setup' },
-    { label: 'Stock ledger', href: '/stock' },
-    { label: 'Suppliers', href: '/suppliers' },
-    { label: 'Purchases', href: '/purchases' },
-    { label: 'Sales / POS', href: '#', soon: true },
-    { label: 'Accounting', href: '#', soon: true },
-    { label: 'Reports', href: '#', soon: true },
-    { label: 'Shop settings', href: '/settings/shop' },
-];
-
 export default function AuthenticatedLayout({ title, children }) {
     const { auth } = usePage().props;
+    const { url } = usePage();
+
+    const navigation = [
+        { label: 'Dashboard', href: '/dashboard', active: url === '/dashboard' || url.startsWith('/dashboard/') },
+        { label: 'Products', href: '/products', active: url.startsWith('/products') },
+        { label: 'Inventory setup', href: '/inventory/setup', active: url.startsWith('/inventory/setup') },
+        { label: 'Stock ledger', href: '/stock', active: url.startsWith('/stock') },
+        { label: 'Suppliers', href: '/suppliers', active: url.startsWith('/suppliers') },
+        { label: 'Purchases', href: '/purchases', active: url.startsWith('/purchases') },
+        { label: 'Customers', href: '/customers', active: url.startsWith('/customers') },
+        { label: 'Sales Invoices', href: '/sales', active: url.startsWith('/sales') },
+        { label: 'POS Billing', href: '/pos', active: url.startsWith('/pos') },
+        { label: 'Chart of Accounts', href: '/accounts', active: url.startsWith('/accounts') },
+        { label: 'Journal Entries', href: '/journals', active: url.startsWith('/journals') },
+        { label: 'Expenses', href: '/expenses', active: url.startsWith('/expenses') },
+        { label: 'Trial Balance', href: '/reports/trial-balance', active: url.startsWith('/reports/trial-balance') },
+        { label: 'Profit & Loss', href: '/reports/profit-loss', active: url.startsWith('/reports/profit-loss') },
+        { label: 'General Ledger', href: '/reports/general-ledger', active: url.startsWith('/reports/general-ledger') },
+        { label: 'Valuation Report', href: '/reports/inventory-valuation', active: url.startsWith('/reports/inventory-valuation') },
+        { label: 'Product Profit', href: '/reports/product-profit', active: url.startsWith('/reports/product-profit') },
+        { label: 'Expiry & Alerts', href: '/reports/expiry', active: url.startsWith('/reports/expiry') },
+        { label: 'Receivables / Payables', href: '/reports/receivables-payables', active: url.startsWith('/reports/receivables-payables') },
+        { label: 'Shop settings', href: '/settings/shop', active: url.startsWith('/settings/shop') },
+    ];
+
+    if (auth.user?.is_super_admin) {
+        navigation.push({
+            label: 'Super Admin Panel',
+            href: '/super-admin/tenants',
+            active: url.startsWith('/super-admin/tenants')
+        });
+    }
 
     function switchTenant(event) {
         router.post(`/shops/${event.target.value}/select`);

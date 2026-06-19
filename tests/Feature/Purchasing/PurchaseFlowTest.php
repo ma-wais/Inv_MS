@@ -75,10 +75,13 @@ class PurchaseFlowTest extends TestCase
         ]);
         $supplier = Supplier::query()->firstOrFail();
 
+        $postingMock = $this->createMock(\App\Services\Accounting\AutomaticPostingService::class);
+
         $service = new PurchaseService(
             $context,
             new DocumentNumberService($context),
             new StockMovementService($context),
+            $postingMock,
         );
 
         $purchase = $service->create([
@@ -110,7 +113,7 @@ class PurchaseFlowTest extends TestCase
         ]);
 
         $this->assertSame('250.0000', $payment->amount);
-        $this->assertSame(875.0, $supplier->fresh()->ledgerBalance());
+        $this->assertSame(775.0, $supplier->fresh()->ledgerBalance());
 
         $return = $service->createReturn($postedPurchase->fresh(['items.variant']), [
             'return_date' => '2026-06-11',
@@ -123,5 +126,6 @@ class PurchaseFlowTest extends TestCase
 
         $this->assertSame('3.000000', $return->items->first()->quantity);
         $this->assertSame('7.000000', $variant->stockBalances()->withoutGlobalScopes()->first()->quantity);
+        $this->assertSame(475.0, $supplier->fresh()->ledgerBalance());
     }
 }
