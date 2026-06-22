@@ -1,5 +1,6 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
+import React, { useEffect } from 'react';
 
 export default function Show({ sale, accounts }) {
     const { flash } = usePage().props;
@@ -12,6 +13,13 @@ export default function Show({ sale, accounts }) {
     function printInvoice() {
         window.print();
     }
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('print') === 'true') {
+            window.print();
+        }
+    }, []);
 
     return (
         <AuthenticatedLayout title={sale.number}>

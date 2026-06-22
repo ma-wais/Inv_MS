@@ -1,5 +1,8 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
+import React from 'react';
+import FloatingInput from '../../../Components/FloatingInput';
+import SearchableSelect from '../../../Components/SearchableSelect';
 
 export default function Show({ customer, ledger, sales, payments, returns: customerReturns }) {
     const { flash } = usePage().props;
@@ -17,6 +20,18 @@ export default function Show({ customer, ledger, sales, payments, returns: custo
         form.post(`/customers/${customer.id}/payments`, { preserveScroll: true, onSuccess: () => form.reset('amount', 'reference', 'notes') });
     }
 
+    const saleOptions = sales.map(s => ({
+        value: s.id,
+        label: `${s.number} - PKR ${money(s.outstanding)}`
+    }));
+
+    const methodOptions = [
+        { value: 'cash', label: 'Cash' },
+        { value: 'bank', label: 'Bank Transfer' },
+        { value: 'card', label: 'Card Payment' },
+        { value: 'mobile', label: 'Mobile Wallet' }
+    ];
+
     return (
         <AuthenticatedLayout title={customer.name}>
             <Head title={customer.name} />
@@ -24,8 +39,8 @@ export default function Show({ customer, ledger, sales, payments, returns: custo
             {flash.status && <div className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{flash.status}</div>}
 
             <section className="grid gap-6 xl:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h2 className="font-semibold">Customer details</h2>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm h-fit">
+                    <h2 className="font-semibold text-slate-800">Customer details</h2>
                     <dl className="mt-4 space-y-3 text-sm">
                         <Row label="Code" value={customer.code} />
                         <Row label="Phone" value={customer.phone ?? '—'} />
@@ -34,30 +49,87 @@ export default function Show({ customer, ledger, sales, payments, returns: custo
                         <Row label="Current balance" value={money(customer.ledger_balance ?? 0)} />
                     </dl>
                     <div className="mt-5 flex gap-2">
-                        <Link href="/pos" className="rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white">New Sale / POS</Link>
+                        <Link href="/pos" className="w-full text-center rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-900">New Sale / POS</Link>
                     </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:col-span-2">
-                    <h2 className="font-semibold">Record payment</h2>
-                    <form onSubmit={submit} className="mt-4 grid gap-3 sm:grid-cols-2">
-                        <select value={form.data.sale_id} onChange={(e) => form.setData('sale_id', e.target.value)} className={inputClass}>
-                            <option value="">Optional invoice</option>
-                            {sales.map((sale) => (
-                                <option key={sale.id} value={sale.id}>
-                                    {sale.number} - {money(sale.outstanding)}
-                                </option>
-                            ))}
-                        </select>
-                        <input type="date" value={form.data.payment_date} onChange={(e) => form.setData('payment_date', e.target.value)} className={inputClass} />
-                        <input type="number" step="any" placeholder="Amount" value={form.data.amount} onChange={(e) => form.setData('amount', e.target.value)} className={inputClass} />
-                        <select value={form.data.method} onChange={(e) => form.setData('method', e.target.value)} className={inputClass}>
-                            {['cash', 'bank', 'card', 'mobile'].map((method) => <option key={method} value={method}>{method}</option>)}
-                        </select>
-                        <input placeholder="Reference" value={form.data.reference} onChange={(e) => form.setData('reference', e.target.value)} className={inputClass} />
-                        <input placeholder="Notes" value={form.data.notes} onChange={(e) => form.setData('notes', e.target.value)} className={inputClass} />
-                        {Object.values(form.errors)[0] && <p className="sm:col-span-2 text-sm text-red-600">{Object.values(form.errors)[0]}</p>}
-                        <button disabled={form.processing} className="rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60 sm:col-span-2">Save payment</button>
+                    <h2 className="font-semibold text-slate-800 mb-4">Record payment</h2>
+                    <form onSubmit={submit} className="space-y-4">
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <SearchableSelect
+                                id="sale_id"
+                                name="sale_id"
+                                label="Optional Invoice"
+                                options={saleOptions}
+                                value={form.data.sale_id}
+                                onChange={(e) => form.setData('sale_id', e.target.value)}
+                                error={form.errors.sale_id}
+                                empty="Optional invoice..."
+                            />
+
+                            <FloatingInput
+                                id="payment_date"
+                                name="payment_date"
+                                type="date"
+                                label="Payment Date"
+                                required
+                                value={form.data.payment_date}
+                                onChange={(e) => form.setData('payment_date', e.target.value)}
+                                error={form.errors.payment_date}
+                            />
+
+                            <FloatingInput
+                                id="amount"
+                                name="amount"
+                                type="number"
+                                step="any"
+                                label="Amount"
+                                required
+                                value={form.data.amount}
+                                onChange={(e) => form.setData('amount', e.target.value)}
+                                error={form.errors.amount}
+                                placeholder="Amount in PKR"
+                            />
+
+                            <SearchableSelect
+                                id="method"
+                                name="method"
+                                label="Payment Method"
+                                required
+                                options={methodOptions}
+                                value={form.data.method}
+                                onChange={(e) => form.setData('method', e.target.value)}
+                                error={form.errors.method}
+                            />
+                        </div>
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <FloatingInput
+                                id="reference"
+                                name="reference"
+                                label="Reference (Optional)"
+                                value={form.data.reference}
+                                onChange={(e) => form.setData('reference', e.target.value)}
+                                error={form.errors.reference}
+                                placeholder="Receipt number, bank reference..."
+                            />
+
+                            <FloatingInput
+                                id="notes"
+                                name="notes"
+                                label="Notes (Optional)"
+                                value={form.data.notes}
+                                onChange={(e) => form.setData('notes', e.target.value)}
+                                error={form.errors.notes}
+                                placeholder="Notes about payment..."
+                            />
+                        </div>
+
+                        {Object.values(form.errors)[0] && !form.errors.sale_id && !form.errors.payment_date && !form.errors.amount && !form.errors.method && !form.errors.reference && !form.errors.notes && (
+                            <p className="text-sm text-red-600">{Object.values(form.errors)[0]}</p>
+                        )}
+                        <button disabled={form.processing} className="w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-60">Save payment</button>
                     </form>
                 </div>
             </section>
@@ -69,17 +141,17 @@ export default function Show({ customer, ledger, sales, payments, returns: custo
             </section>
 
             <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="font-semibold">Payments</h2>
+                <h2 className="font-semibold text-slate-800">Payments</h2>
                 <div className="mt-4 overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Date</th><th>Number</th><th>Method</th><th>Amount</th></tr></thead>
                         <tbody className="divide-y divide-slate-100">
                             {payments.map((payment) => (
                                 <tr key={payment.id}>
-                                    <td className="px-4 py-3">{payment.payment_date}</td>
-                                    <td>{payment.number}</td>
-                                    <td>{payment.method}</td>
-                                    <td className="font-semibold">{money(payment.amount)}</td>
+                                    <td className="px-4 py-3 text-slate-600">{payment.payment_date}</td>
+                                    <td className="font-medium text-slate-800">{payment.number}</td>
+                                    <td className="capitalize text-slate-600">{payment.method}</td>
+                                    <td className="font-semibold text-slate-900">{money(payment.amount)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -93,19 +165,19 @@ export default function Show({ customer, ledger, sales, payments, returns: custo
 function LedgerCard({ title, rows }) {
     return (
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:col-span-2">
-            <h2 className="font-semibold">{title}</h2>
+            <h2 className="font-semibold text-slate-800">{title}</h2>
             <div className="mt-4 overflow-x-auto">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Date</th><th>Type</th><th>Number</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead>
                     <tbody className="divide-y divide-slate-100">
                         {rows.map((row, index) => (
-                            <tr key={index}>
-                                <td className="px-4 py-3">{row.date ?? 'Opening'}</td>
-                                <td>{row.type}</td>
+                            <tr key={index} className="hover:bg-slate-50/50">
+                                <td className="px-4 py-3 text-slate-600">{row.date ?? 'Opening'}</td>
+                                <td className="capitalize">{row.type}</td>
                                 <td>{row.number}</td>
-                                <td>{money(row.debit)}</td>
-                                <td>{money(row.credit)}</td>
-                                <td className="font-semibold">{money(row.balance)}</td>
+                                <td className="text-slate-950 font-semibold">{money(row.debit)}</td>
+                                <td className="text-slate-950 font-semibold">{money(row.credit)}</td>
+                                <td className="font-semibold text-emerald-800">{money(row.balance)}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -117,8 +189,8 @@ function LedgerCard({ title, rows }) {
 
 function ListCard({ title, items, render }) {
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="font-semibold">{title}</h2>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm h-fit">
+            <h2 className="font-semibold text-slate-800">{title}</h2>
             <div className="mt-4 space-y-2">
                 {items.map((item) => <div key={item.id} className="rounded-lg bg-slate-50 px-3 py-2 text-sm">{render(item)}</div>)}
             </div>
@@ -134,4 +206,3 @@ function money(value) {
     return Number(value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-const inputClass = 'w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500';

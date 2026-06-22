@@ -27,12 +27,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $owner = User::firstOrCreate(
-            ['email' => 'owner@ventory.test'],
+        // 1. Seed Super Admin
+        $superAdmin = User::updateOrCreate(
+            ['email' => 'admin@ventory.test'],
             [
-                'name' => 'Ventory Owner',
+                'name' => 'Ventory Super Admin',
                 'password' => Hash::make('password'),
                 'is_super_admin' => true,
+            ],
+        );
+
+        // 2. Seed Store Owner
+        $owner = User::updateOrCreate(
+            ['email' => 'owner@ventory.test'],
+            [
+                'name' => 'Demo Shop Owner',
+                'password' => Hash::make('password'),
+                'is_super_admin' => false,
             ],
         );
 
@@ -46,10 +57,10 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
-        $tenant->users()->syncWithoutDetaching([$owner->id => [
-            'role' => 'owner',
-            'is_default' => true,
-        ]]);
+        $tenant->users()->syncWithoutDetaching([
+            $owner->id => ['role' => 'owner', 'is_default' => true],
+            $superAdmin->id => ['role' => 'owner', 'is_default' => true],
+        ]);
 
         $branch = $tenant->branches()->firstOrCreate(
             ['code' => 'MAIN'],
@@ -226,6 +237,13 @@ class DatabaseSeeder extends Seeder
         $tenant->accounts()->updateOrCreate(['code' => '5200'], [
             'parent_id' => $expenses->id,
             'name' => 'Operating Expenses',
+            'type' => Account::TYPE_EXPENSE,
+            'normal_balance' => 'debit',
+            'is_system' => true,
+        ]);
+        $tenant->accounts()->updateOrCreate(['code' => '5300'], [
+            'parent_id' => $expenses->id,
+            'name' => 'Staff Salaries',
             'type' => Account::TYPE_EXPENSE,
             'normal_balance' => 'debit',
             'is_system' => true,

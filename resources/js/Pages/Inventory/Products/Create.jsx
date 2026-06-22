@@ -1,5 +1,8 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
+import FloatingInput from '../../../Components/FloatingInput';
+import SearchableSelect from '../../../Components/SearchableSelect';
+import React, { useState, useEffect } from 'react';
 
 export default function Create({ categories, brands, units, warehouses }) {
     const form = useForm({
@@ -11,75 +14,565 @@ export default function Create({ categories, brands, units, warehouses }) {
         description: '',
         track_batches: false,
         track_expiry: false,
-        variant_name: 'Default',
-        sku: '',
-        barcode: '',
-        purchase_price: '',
-        sale_price: '',
-        reorder_level: '0',
-        opening_stock: '0',
-        warehouse_id: warehouses[0]?.id ?? '',
+        image: null,
+        variants: [
+            {
+                name: '',
+                sku: '',
+                barcode: '',
+                purchase_price: '',
+                sale_price: '',
+                reorder_level: '0',
+                opening_stock: '0',
+                warehouse_id: warehouses[0]?.id ?? '',
+            }
+        ]
     });
+
+    const [showAddCategory, setShowAddCategory] = useState(false);
+    const [showAddBrand, setShowAddBrand] = useState(false);
+    const [showAddUnit, setShowAddUnit] = useState(false);
+
+    const [lastAddedCategory, setLastAddedCategory] = useState('');
+    const [lastAddedBrand, setLastAddedBrand] = useState('');
+    const [lastAddedUnit, setLastAddedUnit] = useState('');
+
+    useEffect(() => {
+        if (lastAddedCategory) {
+            const found = categories.find(c => c.name === lastAddedCategory);
+            if (found) {
+                form.setData('category_id', found.id);
+                setLastAddedCategory('');
+            }
+        }
+    }, [categories, lastAddedCategory]);
+
+    useEffect(() => {
+        if (lastAddedBrand) {
+            const found = brands.find(b => b.name === lastAddedBrand);
+            if (found) {
+                form.setData('brand_id', found.id);
+                setLastAddedBrand('');
+            }
+        }
+    }, [brands, lastAddedBrand]);
+
+    useEffect(() => {
+        if (lastAddedUnit) {
+            const found = units.find(u => u.name === lastAddedUnit);
+            if (found) {
+                form.setData('base_unit_id', found.id);
+                setLastAddedUnit('');
+            }
+        }
+    }, [units, lastAddedUnit]);
 
     function submit(event) {
         event.preventDefault();
         form.post('/products');
     }
 
+    const addVariantRow = () => {
+        form.setData('variants', [
+            ...form.data.variants,
+            {
+                name: '',
+                sku: '',
+                barcode: '',
+                purchase_price: '',
+                sale_price: '',
+                reorder_level: '0',
+                opening_stock: '0',
+                warehouse_id: warehouses[0]?.id ?? '',
+            }
+        ]);
+    };
+
+    const removeVariantRow = (index) => {
+        if (form.data.variants.length > 1) {
+            form.setData('variants', form.data.variants.filter((_, i) => i !== index));
+        } else {
+            alert('A product must have at least one variant.');
+        }
+    };
+
+    const updateVariantRow = (index, field, value) => {
+        const list = [...form.data.variants];
+        list[index] = { ...list[index], [field]: value };
+        form.setData('variants', list);
+    };
+
     return (
         <AuthenticatedLayout title="Add product">
             <Head title="Add product" />
 
-            <form onSubmit={submit} className="max-w-5xl space-y-6">
-                <Section title="Product details">
-                    <Grid>
-                        <Field label="Product name" error={form.errors.name}><Input value={form.data.name} onChange={(v) => form.setData('name', v)} /></Field>
-                        <Field label="Product type" error={form.errors.product_type}><Select value={form.data.product_type} onChange={(v) => form.setData('product_type', v)} options={[['standard', 'Standard'], ['paint', 'Paint'], ['medicine', 'Medicine']]} /></Field>
-                        <Field label="Category" error={form.errors.category_id}><Select value={form.data.category_id} onChange={(v) => form.setData('category_id', v)} options={categories.map((item) => [item.id, item.name])} empty="Uncategorized" /></Field>
-                        <Field label="Brand" error={form.errors.brand_id}><Select value={form.data.brand_id} onChange={(v) => form.setData('brand_id', v)} options={brands.map((item) => [item.id, item.name])} empty="No brand" /></Field>
-                        <Field label="Base unit" error={form.errors.base_unit_id}><Select value={form.data.base_unit_id} onChange={(v) => form.setData('base_unit_id', v)} options={units.map((item) => [item.id, `${item.name} (${item.symbol})`])} /></Field>
-                    </Grid>
-                    <label className="mt-5 block text-sm font-medium">Description<textarea value={form.data.description} onChange={(e) => form.setData('description', e.target.value)} className={`${inputClass} min-h-24`} /></label>
-                    <div className="mt-5 flex flex-wrap gap-5 text-sm">
-                        <Checkbox label="Track batches" checked={form.data.track_batches} onChange={(v) => form.setData('track_batches', v)} />
-                        <Checkbox label="Track expiry dates" checked={form.data.track_expiry} onChange={(v) => form.setData('track_expiry', v)} />
+            <form onSubmit={submit} className="max-w-6xl space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                    <div className="border-b border-slate-100 pb-3">
+                        <h2 className="text-base font-semibold text-slate-800">Add New Product Details & Variants</h2>
+                        <p className="text-xs text-slate-400">Specify general details and define one or more variants below.</p>
                     </div>
-                </Section>
 
-                <Section title="First variant and pricing">
-                    <Grid>
-                        <Field label="Variant name" error={form.errors.variant_name}><Input value={form.data.variant_name} onChange={(v) => form.setData('variant_name', v)} /></Field>
-                        <Field label="SKU" error={form.errors.sku}><Input value={form.data.sku} onChange={(v) => form.setData('sku', v)} /></Field>
-                        <Field label="Barcode" error={form.errors.barcode}><Input value={form.data.barcode} onChange={(v) => form.setData('barcode', v)} /></Field>
-                        <Field label="Purchase price" error={form.errors.purchase_price}><Input type="number" value={form.data.purchase_price} onChange={(v) => form.setData('purchase_price', v)} /></Field>
-                        <Field label="Sale price" error={form.errors.sale_price}><Input type="number" value={form.data.sale_price} onChange={(v) => form.setData('sale_price', v)} /></Field>
-                        <Field label="Reorder level" error={form.errors.reorder_level}><Input type="number" value={form.data.reorder_level} onChange={(v) => form.setData('reorder_level', v)} /></Field>
-                    </Grid>
-                </Section>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <FloatingInput
+                            label="Product name"
+                            error={form.errors.name}
+                            value={form.data.name}
+                            onChange={(e) => form.setData('name', e.target.value)}
+                            required
+                        />
+                        <SearchableSelect
+                            label="Product type"
+                            error={form.errors.product_type}
+                            value={form.data.product_type}
+                            onChange={(e) => form.setData('product_type', e.target.value)}
+                            options={[['standard', 'Standard'], ['paint', 'Paint'], ['medicine', 'Medicine']]}
+                            required
+                        />
+                        
+                        <div className="flex items-end gap-2">
+                            <div className="flex-1">
+                                <SearchableSelect
+                                    label="Category"
+                                    error={form.errors.category_id}
+                                    value={form.data.category_id}
+                                    onChange={(e) => form.setData('category_id', e.target.value)}
+                                    options={categories.map((item) => ({ value: item.id, label: item.name }))}
+                                    empty="Uncategorized"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowAddCategory(true)}
+                                className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-xl transition-colors min-h-[50px] flex items-center justify-center font-bold text-lg cursor-pointer"
+                                title="Create new category inline"
+                            >
+                                +
+                            </button>
+                        </div>
 
-                <Section title="Opening stock">
-                    <p className="mb-5 text-sm text-slate-500">Optional. This creates the first immutable stock-ledger entry.</p>
-                    <Grid>
-                        <Field label="Opening quantity" error={form.errors.opening_stock}><Input type="number" value={form.data.opening_stock} onChange={(v) => form.setData('opening_stock', v)} /></Field>
-                        <Field label="Warehouse" error={form.errors.warehouse_id}><Select value={form.data.warehouse_id} onChange={(v) => form.setData('warehouse_id', v)} options={warehouses.map((item) => [item.id, item.name])} empty="Select warehouse" /></Field>
-                    </Grid>
-                </Section>
+                        <div className="flex items-end gap-2">
+                            <div className="flex-1">
+                                <SearchableSelect
+                                    label="Brand"
+                                    error={form.errors.brand_id}
+                                    value={form.data.brand_id}
+                                    onChange={(e) => form.setData('brand_id', e.target.value)}
+                                    options={brands.map((item) => ({ value: item.id, label: item.name }))}
+                                    empty="No brand"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowAddBrand(true)}
+                                className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-xl transition-colors min-h-[50px] flex items-center justify-center font-bold text-lg cursor-pointer"
+                                title="Create new brand inline"
+                            >
+                                +
+                            </button>
+                        </div>
+
+                        <div className="flex items-end gap-2">
+                            <div className="flex-1">
+                                <SearchableSelect
+                                    label="Base unit"
+                                    error={form.errors.base_unit_id}
+                                    value={form.data.base_unit_id}
+                                    onChange={(e) => form.setData('base_unit_id', e.target.value)}
+                                    options={units.map((item) => ({ value: item.id, label: `${item.name} (${item.symbol})` }))}
+                                    required
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowAddUnit(true)}
+                                className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-xl transition-colors min-h-[50px] flex items-center justify-center font-bold text-lg cursor-pointer"
+                                title="Create new unit inline"
+                            >
+                                +
+                            </button>
+                        </div>
+
+                        <div className="space-y-1.5 flex flex-col justify-end">
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Product Image</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => form.setData('image', e.target.files[0])}
+                                className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-slate-200 file:text-xs file:font-semibold file:bg-slate-50 file:text-slate-700 hover:file:bg-slate-100 cursor-pointer"
+                            />
+                            {form.errors.image && <p className="text-xs text-red-600 font-semibold">{form.errors.image}</p>}
+                        </div>
+                    </div>
+                    
+                    {/* Compact Description Textarea */}
+                    <div className="relative w-full">
+                        <textarea
+                            id="description"
+                            value={form.data.description}
+                            onChange={(e) => form.setData('description', e.target.value)}
+                            placeholder=" "
+                            className="peer block w-full rounded-xl border border-slate-200 bg-white px-4 pb-2 pt-5 text-sm text-slate-800 outline-none transition-all focus:border-emerald-500 min-h-16"
+                        />
+                        <label
+                            htmlFor="description"
+                            className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-slate-400 duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
+                        >
+                            Description
+                        </label>
+                    </div>
+
+                    <div className="flex flex-wrap gap-5 text-sm">
+                        <Checkbox
+                            label="Track batches"
+                            checked={form.data.track_batches}
+                            onChange={(checked) => form.setData('track_batches', checked)}
+                        />
+                        <Checkbox
+                            label="Track expiry dates"
+                            checked={form.data.track_expiry}
+                            onChange={(checked) => form.setData('track_expiry', checked)}
+                        />
+                    </div>
+
+                    {/* Dynamic Variants Table */}
+                    <div className="border-t border-slate-100 pt-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-bold text-slate-800">Product Variants</h3>
+                            <button
+                                type="button"
+                                onClick={addVariantRow}
+                                className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 text-xs transition-colors cursor-pointer"
+                            >
+                                + Add Variant
+                            </button>
+                        </div>
+
+                        <div className="overflow-x-auto border border-slate-200 rounded-xl bg-slate-50/30">
+                            <table className="w-full text-left text-xs min-w-[900px]">
+                                <thead className="bg-slate-50 border-b border-slate-200 uppercase tracking-wider text-slate-500 font-bold">
+                                    <tr>
+                                        <th className="px-3 py-2.5">Variant Name *</th>
+                                        <th className="px-3 py-2.5">SKU (Optional)</th>
+                                        <th className="px-3 py-2.5">Barcode</th>
+                                        <th className="px-3 py-2.5 w-24">Cost *</th>
+                                        <th className="px-3 py-2.5 w-24">Price *</th>
+                                        <th className="px-3 py-2.5 w-20">Reorder</th>
+                                        <th className="px-3 py-2.5 w-20">Opening Qty</th>
+                                        <th className="px-3 py-2.5">Opening Warehouse</th>
+                                        <th className="px-3 py-2.5 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200">
+                                    {form.data.variants.map((v, index) => (
+                                        <tr key={index} className="hover:bg-slate-50/50">
+                                            <td className="p-2">
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    placeholder="e.g. 5 Gallon"
+                                                    value={v.name}
+                                                    onChange={(e) => updateVariantRow(index, 'name', e.target.value)}
+                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500"
+                                                />
+                                                {form.errors[`variants.${index}.name`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.name`]}</p>}
+                                            </td>
+                                            <td className="p-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Auto-generated if blank"
+                                                    value={v.sku}
+                                                    onChange={(e) => updateVariantRow(index, 'sku', e.target.value)}
+                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500 font-mono"
+                                                />
+                                                {form.errors[`variants.${index}.sku`] && <p className="text-[10px] text-red-655 font-medium mt-0.5">{form.errors[`variants.${index}.sku`]}</p>}
+                                            </td>
+                                            <td className="p-2">
+                                                <input
+                                                    type="text"
+                                                    value={v.barcode}
+                                                    onChange={(e) => updateVariantRow(index, 'barcode', e.target.value)}
+                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500 font-mono"
+                                                />
+                                                {form.errors[`variants.${index}.barcode`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.barcode`]}</p>}
+                                            </td>
+                                            <td className="p-2">
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    required
+                                                    value={v.purchase_price}
+                                                    onChange={(e) => updateVariantRow(index, 'purchase_price', e.target.value)}
+                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500"
+                                                />
+                                                {form.errors[`variants.${index}.purchase_price`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.purchase_price`]}</p>}
+                                            </td>
+                                            <td className="p-2">
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    required
+                                                    value={v.sale_price}
+                                                    onChange={(e) => updateVariantRow(index, 'sale_price', e.target.value)}
+                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500"
+                                                />
+                                                {form.errors[`variants.${index}.sale_price`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.sale_price`]}</p>}
+                                            </td>
+                                            <td className="p-2">
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    value={v.reorder_level}
+                                                    onChange={(e) => updateVariantRow(index, 'reorder_level', e.target.value)}
+                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500"
+                                                />
+                                                {form.errors[`variants.${index}.reorder_level`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.reorder_level`]}</p>}
+                                            </td>
+                                            <td className="p-2">
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    value={v.opening_stock}
+                                                    onChange={(e) => updateVariantRow(index, 'opening_stock', e.target.value)}
+                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500"
+                                                />
+                                                {form.errors[`variants.${index}.opening_stock`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.opening_stock`]}</p>}
+                                            </td>
+                                            <td className="p-2">
+                                                <select
+                                                    disabled={Number(v.opening_stock ?? 0) <= 0}
+                                                    value={v.warehouse_id}
+                                                    onChange={(e) => updateVariantRow(index, 'warehouse_id', e.target.value)}
+                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500 bg-white"
+                                                >
+                                                    {warehouses.map(wh => (
+                                                        <option key={wh.id} value={wh.id}>{wh.name}</option>
+                                                    ))}
+                                                </select>
+                                                {form.errors[`variants.${index}.warehouse_id`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.warehouse_id`]}</p>}
+                                            </td>
+                                            <td className="p-2 text-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeVariantRow(index)}
+                                                    className="text-red-600 hover:text-red-900 transition-colors p-1"
+                                                    title="Remove variant"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {form.errors.variants && (
+                            <p className="text-xs text-red-600 font-semibold mt-2">{form.errors.variants}</p>
+                        )}
+                    </div>
+                </div>
 
                 <div className="flex gap-3">
-                    <button disabled={form.processing} className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">{form.processing ? 'Creating...' : 'Create product'}</button>
-                    <Link href="/products" className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold">Cancel</Link>
+                    <button
+                        type="submit"
+                        disabled={form.processing}
+                        className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors cursor-pointer"
+                    >
+                        {form.processing ? 'Creating...' : 'Create product'}
+                    </button>
+                    <Link
+                        href="/products"
+                        className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold hover:bg-slate-50 transition-colors"
+                    >
+                        Cancel
+                    </Link>
                 </div>
             </form>
+
+            {/* Inline Category Modal */}
+            {showAddCategory && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                            <h3 className="font-semibold text-lg text-slate-800">Add Category</h3>
+                            <button type="button" onClick={() => setShowAddCategory(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                        </div>
+                        <InlineCategoryForm 
+                            categories={categories} 
+                            onSuccess={(name) => {
+                                setLastAddedCategory(name);
+                                setShowAddCategory(false);
+                            }}
+                            onClose={() => setShowAddCategory(false)}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Inline Brand Modal */}
+            {showAddBrand && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                            <h3 className="font-semibold text-lg text-slate-800">Add Brand</h3>
+                            <button type="button" onClick={() => setShowAddBrand(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                        </div>
+                        <InlineBrandForm 
+                            onSuccess={(name) => {
+                                setLastAddedBrand(name);
+                                setShowAddBrand(false);
+                            }}
+                            onClose={() => setShowAddBrand(false)}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Inline Unit Modal */}
+            {showAddUnit && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                            <h3 className="font-semibold text-lg text-slate-800">Add Unit</h3>
+                            <button type="button" onClick={() => setShowAddUnit(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                        </div>
+                        <InlineUnitForm 
+                            onSuccess={(name) => {
+                                setLastAddedUnit(name);
+                                setShowAddUnit(false);
+                            }}
+                            onClose={() => setShowAddUnit(false)}
+                        />
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }
 
-function Section({ title, children }) {
-    return <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="mb-5 text-lg font-semibold">{title}</h2>{children}</section>;
+function Checkbox({ label, checked, onChange }) {
+    return (
+        <label className="flex items-center gap-2 select-none cursor-pointer">
+            <input
+                type="checkbox"
+                checked={checked}
+                onChange={(e) => onChange(e.target.checked)}
+                className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+            />
+            <span className="text-sm font-medium text-slate-700">{label}</span>
+        </label>
+    );
 }
-function Grid({ children }) { return <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{children}</div>; }
-function Field({ label, error, children }) { return <label className="block text-sm font-medium">{label}{children}{error && <span className="mt-1 block text-sm text-red-600">{error}</span>}</label>; }
-function Input({ value, onChange, type = 'text' }) { return <input type={type} step={type === 'number' ? 'any' : undefined} value={value} onChange={(e) => onChange(e.target.value)} className={inputClass} />; }
-function Select({ value, onChange, options, empty }) { return <select value={value} onChange={(e) => onChange(e.target.value)} className={inputClass}>{empty !== undefined && <option value="">{empty}</option>}{options.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select>; }
-function Checkbox({ label, checked, onChange }) { return <label className="flex items-center gap-2"><input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />{label}</label>; }
-const inputClass = 'mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-emerald-500';
+
+function InlineCategoryForm({ categories, onSuccess, onClose }) {
+    const form = useForm({ name: '', parent_id: '', description: '' });
+
+    const submit = (e) => {
+        e.preventDefault();
+        form.post('/inventory/categories', {
+            preserveScroll: true,
+            onSuccess: () => {
+                onSuccess(form.data.name);
+            }
+        });
+    };
+
+    return (
+        <form onSubmit={submit} className="space-y-4">
+            <FloatingInput
+                label="Category Name"
+                value={form.data.name}
+                onChange={(e) => form.setData('name', e.target.value)}
+                required
+            />
+            <SearchableSelect
+                label="Parent Category"
+                value={form.data.parent_id}
+                onChange={(e) => form.setData('parent_id', e.target.value)}
+                options={categories.map((c) => ({ value: c.id, label: c.name }))}
+                empty="No parent"
+            />
+            {form.errors.name && <p className="text-xs text-red-650 font-normal">{form.errors.name}</p>}
+            <div className="flex gap-2 justify-end mt-4">
+                <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" disabled={form.processing} className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Add Category</button>
+            </div>
+        </form>
+    );
+}
+
+function InlineBrandForm({ onSuccess, onClose }) {
+    const form = useForm({ name: '' });
+
+    const submit = (e) => {
+        e.preventDefault();
+        form.post('/inventory/brands', {
+            preserveScroll: true,
+            onSuccess: () => {
+                onSuccess(form.data.name);
+            }
+        });
+    };
+
+    return (
+        <form onSubmit={submit} className="space-y-4">
+            <FloatingInput
+                label="Brand Name"
+                value={form.data.name}
+                onChange={(e) => form.setData('name', e.target.value)}
+                required
+            />
+            {form.errors.name && <p className="text-xs text-red-655 font-normal">{form.errors.name}</p>}
+            <div className="flex gap-2 justify-end mt-4">
+                <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" disabled={form.processing} className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Add Brand</button>
+            </div>
+        </form>
+    );
+}
+
+function InlineUnitForm({ onSuccess, onClose }) {
+    const form = useForm({ name: '', symbol: '', allows_decimal: false });
+
+    const submit = (e) => {
+        e.preventDefault();
+        form.post('/inventory/units', {
+            preserveScroll: true,
+            onSuccess: () => {
+                onSuccess(form.data.name);
+            }
+        });
+    };
+
+    return (
+        <form onSubmit={submit} className="space-y-4">
+            <FloatingInput
+                label="Unit Name"
+                value={form.data.name}
+                onChange={(e) => form.setData('name', e.target.value)}
+                required
+            />
+            <FloatingInput
+                label="Symbol"
+                value={form.data.symbol}
+                onChange={(e) => form.setData('symbol', e.target.value)}
+                required
+            />
+            <label className="flex items-center gap-2 text-sm text-slate-600 select-none cursor-pointer">
+                <input
+                    type="checkbox"
+                    checked={form.data.allows_decimal}
+                    onChange={(e) => form.setData('allows_decimal', e.target.checked)}
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                />
+                <span>Allow decimal quantities</span>
+            </label>
+            {form.errors.name && <p className="text-xs text-red-650 font-normal">{form.errors.name}</p>}
+            {form.errors.symbol && <p className="text-xs text-red-650 font-normal">{form.errors.symbol}</p>}
+            <div className="flex gap-2 justify-end mt-4">
+                <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" disabled={form.processing} className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Add Unit</button>
+            </div>
+        </form>
+    );
+}

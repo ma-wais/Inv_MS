@@ -19,15 +19,17 @@ use App\Http\Controllers\Accounting\ExpenseController;
 use App\Http\Controllers\Accounting\AccountingReportController;
 use App\Http\Controllers\Reporting\OperationalReportController;
 use App\Http\Controllers\SuperAdmin\SuperAdminController;
+use App\Http\Controllers\ShopMediaController;
 use App\Http\Controllers\ShopSettingsController;
 use App\Http\Controllers\TenantSelectionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'appName' => config('app.name'),
-    ]);
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
 });
 
 Route::middleware('guest')->group(function () {
@@ -46,7 +48,24 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('super-admin')->group(function () {
         Route::get('/super-admin/tenants', [SuperAdminController::class, 'index'])->name('super-admin.tenants.index');
+        Route::post('/super-admin/tenants', [SuperAdminController::class, 'storeTenant'])->name('super-admin.tenants.store');
+        Route::put('/super-admin/tenants/{tenant}', [SuperAdminController::class, 'updateTenant'])->name('super-admin.tenants.update');
         Route::post('/super-admin/tenants/{tenant}/toggle-status', [SuperAdminController::class, 'toggleStatus'])->name('super-admin.tenants.toggle-status');
+
+        Route::get('/super-admin/users', [SuperAdminController::class, 'usersIndex'])->name('super-admin.users.index');
+        Route::post('/super-admin/users', [SuperAdminController::class, 'usersStore'])->name('super-admin.users.store');
+        Route::put('/super-admin/users/{user}', [SuperAdminController::class, 'usersUpdate'])->name('super-admin.users.update');
+        Route::delete('/super-admin/users/{user}', [SuperAdminController::class, 'usersDestroy'])->name('super-admin.users.destroy');
+        
+        Route::post('/super-admin/users/{user}/tenants', [SuperAdminController::class, 'linkTenant'])->name('super-admin.users.link-tenant');
+        Route::delete('/super-admin/users/{user}/tenants/{tenant}', [SuperAdminController::class, 'unlinkTenant'])->name('super-admin.users.unlink-tenant');
+
+        Route::get('/super-admin/backups', [\App\Http\Controllers\SuperAdmin\BackupController::class, 'index'])->name('super-admin.backups.index');
+        Route::post('/super-admin/backups', [\App\Http\Controllers\SuperAdmin\BackupController::class, 'store'])->name('super-admin.backups.store');
+        Route::get('/super-admin/backups/{filename}', [\App\Http\Controllers\SuperAdmin\BackupController::class, 'download'])->name('super-admin.backups.download');
+        Route::delete('/super-admin/backups/{filename}', [\App\Http\Controllers\SuperAdmin\BackupController::class, 'destroy'])->name('super-admin.backups.destroy');
+
+        Route::get('/super-admin/activity-logs', [\App\Http\Controllers\SuperAdmin\ActivityLogController::class, 'index'])->name('super-admin.activity-logs.index');
     });
 
     Route::middleware('tenant')->group(function () {
@@ -54,25 +73,60 @@ Route::middleware('auth')->group(function () {
             ->middleware('permission:dashboard.view')
             ->name('dashboard');
 
+        Route::get('/profile', [\App\Http\Controllers\Settings\ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [\App\Http\Controllers\Settings\ProfileController::class, 'update'])->name('profile.update');
+
         Route::get('/settings/shop', [ShopSettingsController::class, 'edit'])
             ->middleware('permission:shops.manage')
             ->name('settings.shop.edit');
         Route::put('/settings/shop', [ShopSettingsController::class, 'update'])
             ->middleware('permission:shops.manage')
             ->name('settings.shop.update');
+        Route::get('/settings/backup', [ShopSettingsController::class, 'backup'])
+            ->middleware('permission:shops.manage')
+            ->name('settings.shop.backup');
+
+        Route::middleware('permission:shops.manage')->group(function () {
+            Route::get('/settings/staff', [\App\Http\Controllers\Settings\StaffController::class, 'index'])->name('settings.staff.index');
+            Route::post('/settings/staff', [\App\Http\Controllers\Settings\StaffController::class, 'store'])->name('settings.staff.store');
+            Route::put('/settings/staff/{user}', [\App\Http\Controllers\Settings\StaffController::class, 'update'])->name('settings.staff.update');
+            Route::delete('/settings/staff/{user}', [\App\Http\Controllers\Settings\StaffController::class, 'destroy'])->name('settings.staff.destroy');
+        });
+
+        Route::get('/settings/media', [ShopMediaController::class, 'index'])
+            ->middleware('permission:shops.manage')
+            ->name('settings.media.index');
+        Route::post('/settings/media', [ShopMediaController::class, 'store'])
+            ->middleware('permission:shops.manage')
+            ->name('settings.media.store');
+        Route::delete('/settings/media/{media}', [ShopMediaController::class, 'destroy'])
+            ->middleware('permission:shops.manage')
+            ->name('settings.media.destroy');
 
         Route::middleware('permission:products.manage')->group(function () {
             Route::get('/inventory/setup', [CatalogSetupController::class, 'index'])->name('inventory.setup');
             Route::post('/inventory/categories', [CatalogSetupController::class, 'storeCategory'])->name('categories.store');
+            Route::put('/inventory/categories/{category}', [CatalogSetupController::class, 'updateCategory'])->name('categories.update');
+            Route::delete('/inventory/categories/{category}', [CatalogSetupController::class, 'destroyCategory'])->name('categories.destroy');
+
             Route::post('/inventory/brands', [CatalogSetupController::class, 'storeBrand'])->name('brands.store');
+            Route::put('/inventory/brands/{brand}', [CatalogSetupController::class, 'updateBrand'])->name('brands.update');
+            Route::delete('/inventory/brands/{brand}', [CatalogSetupController::class, 'destroyBrand'])->name('brands.destroy');
+
             Route::post('/inventory/units', [CatalogSetupController::class, 'storeUnit'])->name('units.store');
+            Route::put('/inventory/units/{unit}', [CatalogSetupController::class, 'updateUnit'])->name('units.update');
+            Route::delete('/inventory/units/{unit}', [CatalogSetupController::class, 'destroyUnit'])->name('units.destroy');
 
             Route::get('/products', [ProductController::class, 'index'])->name('products.index');
             Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
             Route::post('/products', [ProductController::class, 'store'])->name('products.store');
             Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
             Route::post('/products/{product}/variants', [ProductController::class, 'storeVariant'])->name('products.variants.store');
+            Route::delete('/products/{product}/variants/{variant}', [ProductController::class, 'destroyVariant'])->name('products.variants.destroy');
+            Route::put('/products/{product}/variants/{variant}', [ProductController::class, 'updateVariant'])->name('products.variants.update');
             Route::post('/products/{product}/unit-conversions', [ProductController::class, 'storeUnitConversion'])->name('products.unit-conversions.store');
+            Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+            Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
         });
 
         Route::middleware('permission:stock.manage')->group(function () {
@@ -89,6 +143,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
             Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
             Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+            Route::get('/purchases/returns', [PurchaseReturnController::class, 'index'])->name('purchase-returns.index');
+            Route::get('/purchases/returns/{return}', [PurchaseReturnController::class, 'show'])->name('purchase-returns.show');
             Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
             Route::post('/purchases/{purchase}/receive', [PurchaseController::class, 'receive'])->name('purchases.receive');
 
@@ -105,6 +161,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
             Route::get('/pos', [SaleController::class, 'create'])->name('sales.create');
             Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
+            Route::get('/sales/returns', [SaleReturnController::class, 'index'])->name('sale-returns.index');
+            Route::get('/sales/returns/{return}', [SaleReturnController::class, 'show'])->name('sale-returns.show');
             Route::get('/sales/{sale}', [SaleController::class, 'show'])->name('sales.show');
 
             Route::get('/sales/{sale}/returns/create', [SaleReturnController::class, 'create'])->name('sale-returns.create');
@@ -112,6 +170,7 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::middleware('permission:accounting.manage')->group(function () {
+            Route::get('/accounts/create', [AccountController::class, 'create'])->name('accounts.create');
             Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
             Route::post('/accounts', [AccountController::class, 'store'])->name('accounts.store');
 

@@ -1,5 +1,8 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
+import React from 'react';
+import FloatingInput from '../../../Components/FloatingInput';
+import SearchableSelect from '../../../Components/SearchableSelect';
 
 export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
     const { flash } = usePage().props;
@@ -21,6 +24,16 @@ export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
         });
     }
 
+    const expenseAccountOptions = expenseAccounts.map(acc => ({
+        value: acc.id,
+        label: `${acc.code} - ${acc.name}`
+    }));
+
+    const paymentAccountOptions = paymentAccounts.map(acc => ({
+        value: acc.id,
+        label: `${acc.code} - ${acc.name}`
+    }));
+
     return (
         <AuthenticatedLayout title="Expenses">
             <Head title="Expenses" />
@@ -30,89 +43,86 @@ export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
             <section className="grid gap-6 xl:grid-cols-3">
                 {/* Record Expense Form */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm h-fit">
-                    <h2 className="font-semibold text-slate-800">Record Expense</h2>
-                    <form onSubmit={submit} className="mt-4 space-y-3">
-                        <label className="block text-sm font-medium text-slate-700">
-                            Expense Date
-                            <input 
-                                type="date" 
-                                required 
-                                value={form.data.expense_date} 
-                                onChange={(e) => form.setData('expense_date', e.target.value)} 
-                                className={inputClass} 
-                            />
-                            {form.errors.expense_date && <span className="mt-1 block text-xs text-red-600">{form.errors.expense_date}</span>}
-                        </label>
+                    <h2 className="font-semibold text-slate-800 mb-4">Record Expense</h2>
+                    <form onSubmit={submit} className="space-y-4">
+                        <FloatingInput
+                            id="expense_date"
+                            name="expense_date"
+                            type="date"
+                            label="Expense Date"
+                            required
+                            value={form.data.expense_date}
+                            onChange={(e) => form.setData('expense_date', e.target.value)}
+                            error={form.errors.expense_date}
+                        />
 
-                        <label className="block text-sm font-medium text-slate-700">
-                            Expense Category (Debit Account)
-                            <select 
-                                value={form.data.expense_account_id} 
-                                onChange={(e) => form.setData('expense_account_id', e.target.value)} 
-                                className={inputClass}
-                            >
-                                {expenseAccounts.map(acc => (
-                                    <option key={acc.id} value={acc.id}>{acc.code} - {acc.name}</option>
-                                ))}
-                            </select>
-                            {form.errors.expense_account_id && <span className="mt-1 block text-xs text-red-600">{form.errors.expense_account_id}</span>}
-                        </label>
+                        <SearchableSelect
+                            id="expense_account_id"
+                            name="expense_account_id"
+                            label="Expense Category (Debit Account)"
+                            required
+                            options={expenseAccountOptions}
+                            value={form.data.expense_account_id}
+                            onChange={(e) => form.setData('expense_account_id', e.target.value)}
+                            error={form.errors.expense_account_id}
+                        />
 
-                        <label className="block text-sm font-medium text-slate-700">
-                            Paid From (Credit Account)
-                            <select 
-                                value={form.data.payment_account_id} 
-                                onChange={(e) => form.setData('payment_account_id', e.target.value)} 
-                                className={inputClass}
-                            >
-                                {paymentAccounts.map(acc => (
-                                    <option key={acc.id} value={acc.id}>{acc.code} - {acc.name}</option>
-                                ))}
-                            </select>
-                            {form.errors.payment_account_id && <span className="mt-1 block text-xs text-red-600">{form.errors.payment_account_id}</span>}
-                        </label>
+                        <SearchableSelect
+                            id="payment_account_id"
+                            name="payment_account_id"
+                            label="Paid From (Credit Account)"
+                            required
+                            options={paymentAccountOptions}
+                            value={form.data.payment_account_id}
+                            onChange={(e) => form.setData('payment_account_id', e.target.value)}
+                            error={form.errors.payment_account_id}
+                        />
 
-                        <label className="block text-sm font-medium text-slate-700">
-                            Amount
-                            <input 
-                                type="number" 
-                                step="any"
-                                required 
-                                placeholder="Amount in PKR"
-                                value={form.data.amount} 
-                                onChange={(e) => form.setData('amount', e.target.value)} 
-                                className={inputClass} 
-                            />
-                            {form.errors.amount && <span className="mt-1 block text-xs text-red-600">{form.errors.amount}</span>}
-                        </label>
+                        <FloatingInput
+                            id="amount"
+                            name="amount"
+                            type="number"
+                            step="any"
+                            label="Amount"
+                            required
+                            value={form.data.amount}
+                            onChange={(e) => form.setData('amount', e.target.value)}
+                            error={form.errors.amount}
+                            placeholder="Amount in PKR"
+                        />
 
-                        <label className="block text-sm font-medium text-slate-700">
-                            Reference (Optional)
-                            <input 
-                                type="text" 
-                                placeholder="Receipt number, check number..."
-                                value={form.data.reference} 
-                                onChange={(e) => form.setData('reference', e.target.value)} 
-                                className={inputClass} 
-                            />
-                            {form.errors.reference && <span className="mt-1 block text-xs text-red-600">{form.errors.reference}</span>}
-                        </label>
+                        <FloatingInput
+                            id="reference"
+                            name="reference"
+                            label="Reference (Optional)"
+                            value={form.data.reference}
+                            onChange={(e) => form.setData('reference', e.target.value)}
+                            error={form.errors.reference}
+                            placeholder="Receipt number, check number..."
+                        />
 
-                        <label className="block text-sm font-medium text-slate-700">
-                            Notes
-                            <textarea 
+                        <div className="relative w-full">
+                            <textarea
+                                id="notes"
+                                name="notes"
                                 required
-                                placeholder="What was this expense for?"
-                                value={form.data.notes} 
-                                onChange={(e) => form.setData('notes', e.target.value)} 
-                                className={`${inputClass} min-h-20`} 
+                                value={form.data.notes ?? ''}
+                                onChange={(e) => form.setData('notes', e.target.value)}
+                                placeholder=" "
+                                className="peer block w-full rounded-xl border border-slate-200 bg-white px-4 pb-2.5 pt-5 text-sm text-slate-800 outline-none transition-all focus:border-emerald-500 min-h-[80px]"
                             />
-                            {form.errors.notes && <span className="mt-1 block text-xs text-red-600">{form.errors.notes}</span>}
-                        </label>
+                            <label
+                                htmlFor="notes"
+                                className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-slate-400 duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
+                            >
+                                Notes
+                            </label>
+                            {form.errors.notes && <p className="mt-1 text-xs text-red-600 font-normal">{form.errors.notes}</p>}
+                        </div>
 
-                        <button 
-                            disabled={form.processing} 
-                            className="w-full rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60 hover:bg-slate-800"
+                        <button
+                            disabled={form.processing}
+                            className="w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-60"
                         >
                             Save Expense
                         </button>
@@ -161,4 +171,3 @@ export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
     );
 }
 
-const inputClass = 'mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 bg-white';

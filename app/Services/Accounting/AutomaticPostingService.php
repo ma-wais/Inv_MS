@@ -4,6 +4,7 @@ namespace App\Services\Accounting;
 
 use App\Models\Account;
 use App\Models\CustomerPayment;
+use App\Models\ProductVariant;
 use App\Models\Purchase;
 use App\Models\PurchaseReturn;
 use App\Models\Sale;
@@ -274,6 +275,38 @@ class AutomaticPostingService
                 'debit' => 0.0,
                 'credit' => $cogsReversal,
                 'description' => 'Cost of Goods Sold credit (reversal)',
+            ],
+        ]);
+    }
+
+    public function postOpeningStock(ProductVariant $variant, float $quantity, float $unitCost): void
+    {
+        $inventoryAcc = $this->getAccount('1400');
+        $equityAcc = $this->getAccount('3000');
+
+        $amount = $quantity * $unitCost;
+
+        if ($amount <= 0) return;
+
+        $this->journalEntries->create([
+            'entry_date' => now()->toDateString(),
+            'reference_type' => ProductVariant::class,
+            'reference_id' => $variant->id,
+            'reference_number' => $variant->sku,
+            'description' => "System posting for opening stock: {$variant->sku}",
+            'is_system' => true,
+        ], [
+            [
+                'account_id' => $inventoryAcc->id,
+                'debit' => $amount,
+                'credit' => 0.0,
+                'description' => 'Opening stock inventory addition',
+            ],
+            [
+                'account_id' => $equityAcc->id,
+                'debit' => 0.0,
+                'credit' => $amount,
+                'description' => 'Equity opening balance credit',
             ],
         ]);
     }

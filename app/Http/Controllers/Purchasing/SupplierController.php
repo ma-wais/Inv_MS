@@ -14,13 +14,40 @@ use Inertia\Response;
 
 class SupplierController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->input('search'));
+        $sort = $request->input('sort', 'name');
+        $direction = $request->input('direction', 'asc');
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'asc';
+        }
+
+        $query = Supplier::query()
+            ->withCount(['purchases', 'payments', 'returns'])
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('contact_person', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('phone', 'like', "%{$search}%")
+                      ->orWhere('code', 'like', "%{$search}%");
+                });
+            });
+
+        if (in_array($sort, ['name', 'purchases_count', 'payments_count', 'opening_balance', 'code'])) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('name', $direction);
+        }
+
         return Inertia::render('Purchasing/Suppliers/Index', [
-            'suppliers' => Supplier::query()
-                ->withCount(['purchases', 'payments', 'returns'])
-                ->orderBy('name')
-                ->get(),
+            'suppliers' => $query->get(),
+            'filters' => [
+                'search' => $search,
+                'sort' => $sort,
+                'direction' => $direction,
+            ]
         ]);
     }
 

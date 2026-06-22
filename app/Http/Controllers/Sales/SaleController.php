@@ -17,13 +17,61 @@ use Inertia\Response;
 
 class SaleController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return Inertia::render('Sales/Index', [
-            'sales' => Sale::query()
-                ->with(['customer:id,name', 'warehouse:id,name'])
-                ->latest('sale_date')
-                ->paginate(20),
+        $search = trim((string) $request->input('search'));
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $sort = $request->input('sort', 'id');
+        $direction = $request->input('direction', 'desc');
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'desc';
+        }
+
+        $query = Sale::query()
+            ->with(['customer:id,name', 'warehouse:id,name'])
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('number', 'like', "%{$search}%")
+                      ->orWhereHas('customer', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                      ->orWhereHas('warehouse', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+                });
+            })
+            ->when($startDate, function ($query, $startDate) {
+                $query->whereDate('sale_date', '>=', $startDate);
+            })
+            ->when($endDate, function ($query, $endDate) {
+                $query->whereDate('sale_date', '<=', $endDate);
+            });
+
+        // Apply sorting
+        if ($sort === 'number') {
+            $query->orderBy('number', $direction);
+        } elseif ($sort === 'customer') {
+            $query->leftJoin('customers', 'sales.customer_id', '=', 'customers.id')
+                ->select('sales.*')
+                ->orderBy('customers.name', $direction);
+        } elseif ($sort === 'warehouse') {
+            $query->leftJoin('warehouses', 'sales.warehouse_id', '=', 'warehouses.id')
+                ->select('sales.*')
+                ->orderBy('warehouses.name', $direction);
+        } elseif ($sort === 'total') {
+            $query->orderBy('grand_total', $direction);
+        } elseif ($sort === 'outstanding') {
+            $query->orderByRaw('(grand_total - paid_total) ' . $direction);
+        } else {
+            $query->orderBy('sales.id', $direction);
+        }
+
+        return Inertia::render('Sales/Sales/Index', [
+            'sales' => $query->paginate(20)->withQueryString(),
+            'filters' => [
+                'search' => $search,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'sort' => $sort,
+                'direction' => $direction,
+            ]
         ]);
     }
 
@@ -89,12 +137,12 @@ class SaleController extends Controller
 
         $audit->record('sale.created', $sale, null, $sale->toArray());
 
-        return redirect()->route('sales.show', $sale)->with('status', 'Sale saved.');
+        return redirect()->route('sales.show', [$sale, 'print' => 'true'])->with('status', 'Sale saved.');
     }
 
     public function show(Sale $sale): Response
     {
-        return Inertia::render('Sales/Show', [
+        return Inertia::render('Sales/Sales/Show', [
             'sale' => $sale->load(['customer', 'warehouse', 'items.variant.product.baseUnit', 'items.batch']),
             'accounts' => Account::query()->where('is_active', true)->orderBy('code')->get(['id', 'code', 'name']),
         ]);

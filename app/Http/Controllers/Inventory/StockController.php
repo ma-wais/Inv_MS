@@ -17,24 +17,60 @@ use InvalidArgumentException;
 
 class StockController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->query('search');
+        $warehouseId = $request->query('warehouse_id');
+        $variantId = $request->query('product_variant_id');
+
+        $balancesQuery = StockBalance::query()
+            ->where('quantity', '>', 0)
+            ->with([
+                'variant:id,product_id,name,sku,reorder_level',
+                'variant.product:id,name,base_unit_id',
+                'variant.product.baseUnit:id,symbol',
+                'warehouse:id,name',
+                'batch:id,batch_number,expires_at',
+            ]);
+
+        $movementsQuery = StockMovement::query()
+            ->with(['variant:id,product_id,name,sku', 'variant.product:id,name', 'warehouse:id,name']);
+
+        if ($search) {
+            $balancesQuery->whereHas('variant', function ($q) use ($search) {
+                $q->where('sku', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%")
+                  ->orWhereHas('product', function ($pq) use ($search) {
+                      $pq->where('name', 'like', "%{$search}%");
+                  });
+            });
+            $movementsQuery->whereHas('variant', function ($q) use ($search) {
+                $q->where('sku', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%")
+                  ->orWhereHas('product', function ($pq) use ($search) {
+                      $pq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($warehouseId) {
+            $balancesQuery->where('warehouse_id', $warehouseId);
+            $movementsQuery->where('warehouse_id', $warehouseId);
+        }
+
+        if ($variantId) {
+            $balancesQuery->where('product_variant_id', $variantId);
+            $movementsQuery->where('product_variant_id', $variantId);
+        }
+
         return Inertia::render('Inventory/Stock/Index', [
-            'balances' => StockBalance::query()
-                ->with([
-                    'variant:id,product_id,name,sku,reorder_level',
-                    'variant.product:id,name,base_unit_id',
-                    'variant.product.baseUnit:id,symbol',
-                    'warehouse:id,name',
-                    'batch:id,batch_number,expires_at',
-                ])
-                ->orderBy('quantity')
-                ->get(),
-            'movements' => StockMovement::query()
-                ->with(['variant:id,product_id,name,sku', 'variant.product:id,name', 'warehouse:id,name'])
-                ->latest('occurred_at')
-                ->limit(50)
-                ->get(),
+            'balances' => $balancesQuery->orderBy('quantity')->get(),
+            'movements' => $movementsQuery->latest('occurred_at')->limit(100)->get(),
+            'filters' => [
+                'search' => $search ?? '',
+                'warehouse_id' => $warehouseId ?? '',
+                'product_variant_id' => $variantId ?? '',
+            ],
             'variants' => ProductVariant::query()
                 ->with('product:id,name')
                 ->where('is_active', true)

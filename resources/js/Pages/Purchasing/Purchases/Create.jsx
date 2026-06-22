@@ -1,5 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
+import FloatingInput from '../../../Components/FloatingInput';
+import SearchableSelect from '../../../Components/SearchableSelect';
 
 export default function Create({ suppliers, warehouses, variants }) {
     const form = useForm({
@@ -33,60 +35,194 @@ export default function Create({ suppliers, warehouses, variants }) {
         <AuthenticatedLayout title="New purchase">
             <Head title="New purchase" />
 
-            <form onSubmit={submit} className="space-y-6">
-                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 className="font-semibold">Header</h2>
-                    <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                        <Field label="Supplier"><Select value={form.data.supplier_id} onChange={(v) => form.setData('supplier_id', v)} options={suppliers.map((item) => [item.id, item.name])} /></Field>
-                        <Field label="Warehouse"><Select value={form.data.warehouse_id} onChange={(v) => form.setData('warehouse_id', v)} options={warehouses.map((item) => [item.id, item.name])} /></Field>
-                        <Field label="Supplier invoice #"><Input value={form.data.supplier_invoice_number} onChange={(v) => form.setData('supplier_invoice_number', v)} /></Field>
-                        <Field label="Purchase date"><Input type="date" value={form.data.purchase_date} onChange={(v) => form.setData('purchase_date', v)} /></Field>
-                        <Field label="Due date"><Input type="date" value={form.data.due_date} onChange={(v) => form.setData('due_date', v)} /></Field>
-                        <Field label="Status"><Select value={form.data.status} onChange={(v) => form.setData('status', v)} options={[['draft', 'Draft'], ['ordered', 'Ordered'], ['received', 'Received and post stock']]} /></Field>
+            <form onSubmit={submit} className="space-y-4">
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h2 className="font-semibold text-base text-slate-800 mb-4">Header Info</h2>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <SearchableSelect
+                            label="Supplier"
+                            value={form.data.supplier_id}
+                            onChange={(e) => form.setData('supplier_id', e.target.value)}
+                            options={suppliers.map((item) => ({ value: item.id, label: item.name }))}
+                            required
+                        />
+                        <SearchableSelect
+                            label="Warehouse"
+                            value={form.data.warehouse_id}
+                            onChange={(e) => form.setData('warehouse_id', e.target.value)}
+                            options={warehouses.map((item) => ({ value: item.id, label: item.name }))}
+                            required
+                        />
+                        <FloatingInput
+                            label="Supplier invoice #"
+                            value={form.data.supplier_invoice_number}
+                            onChange={(e) => form.setData('supplier_invoice_number', e.target.value)}
+                        />
+                        <FloatingInput
+                            label="Purchase date"
+                            type="date"
+                            value={form.data.purchase_date}
+                            onChange={(e) => form.setData('purchase_date', e.target.value)}
+                            required
+                        />
+                        <FloatingInput
+                            label="Due date"
+                            type="date"
+                            value={form.data.due_date}
+                            onChange={(e) => form.setData('due_date', e.target.value)}
+                        />
+                        <SearchableSelect
+                            label="Status"
+                            value={form.data.status}
+                            onChange={(e) => form.setData('status', e.target.value)}
+                            options={[
+                                { value: 'draft', label: 'Draft' },
+                                { value: 'ordered', label: 'Ordered' },
+                                { value: 'received', label: 'Received and post stock' }
+                            ]}
+                            required
+                        />
                     </div>
                 </section>
 
-                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <h2 className="font-semibold">Items</h2>
-                        <button type="button" onClick={() => form.setData('items', [...form.data.items, { product_variant_id: variants[0]?.id ?? '', quantity: '', unit_cost: '', batch_number: '', expires_at: '' }])} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold">Add line</button>
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="font-semibold text-base text-slate-800">Items</h2>
+                        <button
+                            type="button"
+                            onClick={() => form.setData('items', [...form.data.items, { product_variant_id: variants[0]?.id ?? '', quantity: '', unit_cost: '', batch_number: '', expires_at: '' }])}
+                            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
+                        >
+                            + Add Line
+                        </button>
                     </div>
 
-                    <div className="mt-5 space-y-4">
+                    <div className="space-y-3">
                         {form.data.items.map((item, index) => (
-                            <div key={index} className="grid gap-3 rounded-xl border border-slate-100 p-4 lg:grid-cols-6">
-                                <Select value={item.product_variant_id} onChange={(v) => setItem(index, 'product_variant_id', v)} options={variants.map((variant) => [variant.id, `${variant.product.name} · ${variant.sku}`])} />
-                                <Input type="number" step="any" value={item.quantity} onChange={(v) => setItem(index, 'quantity', v)} placeholder="Qty" />
-                                <Input type="number" step="any" value={item.unit_cost} onChange={(v) => setItem(index, 'unit_cost', v)} placeholder="Cost" />
-                                <Input value={item.batch_number} onChange={(v) => setItem(index, 'batch_number', v)} placeholder="Batch" />
-                                <Input type="date" value={item.expires_at} onChange={(v) => setItem(index, 'expires_at', v)} placeholder="Expiry" />
-                                <button type="button" onClick={() => form.setData('items', form.data.items.filter((_, i) => i !== index))} className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-600">Remove</button>
+                            <div key={index} className="grid gap-3 rounded-xl border border-slate-100 p-4 lg:grid-cols-12 items-center bg-slate-50/30">
+                                {/* Product selector */}
+                                <div className="lg:col-span-4">
+                                    <SearchableSelect
+                                        label="Product & Variant"
+                                        value={item.product_variant_id}
+                                        onChange={(e) => setItem(index, 'product_variant_id', e.target.value)}
+                                        options={variants.map((v) => ({ value: v.id, label: `${v.product.name} (${v.name}) · ${v.sku}` }))}
+                                        required
+                                    />
+                                </div>
+                                {/* Qty */}
+                                <div className="lg:col-span-2">
+                                    <FloatingInput
+                                        label="Qty"
+                                        type="number"
+                                        step="any"
+                                        value={item.quantity}
+                                        onChange={(e) => setItem(index, 'quantity', e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                {/* Cost */}
+                                <div className="lg:col-span-2">
+                                    <FloatingInput
+                                        label="Cost"
+                                        type="number"
+                                        step="any"
+                                        value={item.unit_cost}
+                                        onChange={(e) => setItem(index, 'unit_cost', e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                {/* Batch */}
+                                <div className="lg:col-span-2">
+                                    <FloatingInput
+                                        label="Batch"
+                                        value={item.batch_number}
+                                        onChange={(e) => setItem(index, 'batch_number', e.target.value)}
+                                    />
+                                </div>
+                                {/* Expiry */}
+                                <div className="lg:col-span-2 flex items-center gap-2">
+                                    <div className="flex-1">
+                                        <FloatingInput
+                                            label="Expiry"
+                                            type="date"
+                                            value={item.expires_at}
+                                            onChange={(e) => setItem(index, 'expires_at', e.target.value)}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => form.setData('items', form.data.items.filter((_, i) => i !== index))}
+                                        className="rounded-lg border border-red-200 p-2.5 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                        title="Remove Line"
+                                    >
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
 
-                    <div className="mt-6 grid gap-5 sm:grid-cols-3">
-                        <Field label="Discount total"><Input type="number" step="any" value={form.data.discount_total} onChange={(v) => form.setData('discount_total', v)} /></Field>
-                        <Field label="Tax total"><Input type="number" step="any" value={form.data.tax_total} onChange={(v) => form.setData('tax_total', v)} /></Field>
-                        <Field label="Shipping total"><Input type="number" step="any" value={form.data.shipping_total} onChange={(v) => form.setData('shipping_total', v)} /></Field>
+                    <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                        <FloatingInput
+                            label="Discount total"
+                            type="number"
+                            step="any"
+                            value={form.data.discount_total}
+                            onChange={(e) => form.setData('discount_total', e.target.value)}
+                        />
+                        <FloatingInput
+                            label="Tax total"
+                            type="number"
+                            step="any"
+                            value={form.data.tax_total}
+                            onChange={(e) => form.setData('tax_total', e.target.value)}
+                        />
+                        <FloatingInput
+                            label="Shipping total"
+                            type="number"
+                            step="any"
+                            value={form.data.shipping_total}
+                            onChange={(e) => form.setData('shipping_total', e.target.value)}
+                        />
                     </div>
 
-                    <label className="mt-5 block text-sm font-medium">
-                        Notes
-                        <textarea value={form.data.notes} onChange={(e) => form.setData('notes', e.target.value)} className={`${inputClass} min-h-24`} />
-                    </label>
+                    {/* Compact Notes Textarea */}
+                    <div className="relative mt-4 w-full">
+                        <textarea
+                            id="notes"
+                            value={form.data.notes}
+                            onChange={(e) => form.setData('notes', e.target.value)}
+                            placeholder=" "
+                            className="peer block w-full rounded-xl border border-slate-200 bg-white px-4 pb-2 pt-5 text-sm text-slate-800 outline-none transition-all focus:border-emerald-500 min-h-16"
+                        />
+                        <label
+                            htmlFor="notes"
+                            className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-slate-400 duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
+                        >
+                            Notes
+                        </label>
+                    </div>
                 </section>
 
                 <div className="flex gap-3">
-                    <button disabled={form.processing} className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white disabled:opacity-60">Save purchase</button>
-                    <Link href="/purchases" className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold">Cancel</Link>
+                    <button
+                        type="submit"
+                        disabled={form.processing}
+                        className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors cursor-pointer"
+                    >
+                        Save purchase
+                    </button>
+                    <Link
+                        href="/purchases"
+                        className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold hover:bg-slate-50 transition-colors"
+                    >
+                        Cancel
+                    </Link>
                 </div>
             </form>
         </AuthenticatedLayout>
     );
 }
-
-function Field({ label, children }) { return <label className="block text-sm font-medium">{label}{children}</label>; }
-function Input({ value, onChange, type = 'text', step, placeholder }) { return <input type={type} step={step} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} className={inputClass} />; }
-function Select({ value, onChange, options }) { return <select value={value} onChange={(e) => onChange(e.target.value)} className={inputClass}>{options.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select>; }
-const inputClass = 'mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500';

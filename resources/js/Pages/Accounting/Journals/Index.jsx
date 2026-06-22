@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
+import Pagination from '../../../Components/Pagination';
 
 export default function Index({ entries }) {
     const { flash } = usePage().props;
@@ -73,6 +74,7 @@ export default function Index({ entries }) {
                     </div>
                 )}
             </div>
+            <Pagination links={entries.links} className="mt-6" />
         </AuthenticatedLayout>
     );
 }

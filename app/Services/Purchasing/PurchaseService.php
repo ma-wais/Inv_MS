@@ -73,13 +73,13 @@ class PurchaseService
                 'supplier_invoice_number' => $data['supplier_invoice_number'] ?? null,
                 'purchase_date' => $data['purchase_date'],
                 'due_date' => $data['due_date'] ?? null,
-                'status' => $data['status'] ?? Purchase::STATUS_DRAFT,
+                'status' => $data['status'] === Purchase::STATUS_RECEIVED ? Purchase::STATUS_ORDERED : ($data['status'] ?? Purchase::STATUS_DRAFT),
                 'subtotal' => $subtotal,
                 'discount_total' => $discount,
                 'tax_total' => $tax,
                 'shipping_total' => $shipping,
                 'grand_total' => $grandTotal,
-                'ordered_at' => ($data['status'] ?? null) === Purchase::STATUS_ORDERED ? now() : null,
+                'ordered_at' => in_array($data['status'] ?? null, [Purchase::STATUS_ORDERED, Purchase::STATUS_RECEIVED], true) ? now() : null,
                 'notes' => $data['notes'] ?? null,
             ]);
 

@@ -1,8 +1,40 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
+import React, { useState } from 'react';
 
 export default function Show({ product, units }) {
     const { flash } = usePage().props;
+
+    const [editingVariant, setEditingVariant] = useState(null);
+    const editForm = useForm({
+        name: '',
+        sku: '',
+        barcode: '',
+        purchase_price: '',
+        sale_price: '',
+        reorder_level: '',
+    });
+
+    const handleEditVariantClick = (variant) => {
+        setEditingVariant(variant);
+        editForm.setData({
+            name: variant.name || '',
+            sku: variant.sku || '',
+            barcode: variant.barcodes[0]?.barcode || '',
+            purchase_price: variant.purchase_price || '',
+            sale_price: variant.sale_price || '',
+            reorder_level: variant.reorder_level || '0',
+        });
+        editForm.clearErrors();
+    };
+
+    const submitEditVariant = (e) => {
+        e.preventDefault();
+        editForm.put(`/products/${product.id}/variants/${editingVariant.id}`, {
+            preserveScroll: true,
+            onSuccess: () => setEditingVariant(null),
+        });
+    };
 
     return (
         <AuthenticatedLayout title={product.name}>
@@ -30,7 +62,13 @@ export default function Show({ product, units }) {
                     <div className="mt-3 overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead className="border-b border-slate-200 text-xs uppercase text-slate-400">
-                                <tr><th className="py-3">Variant</th><th>SKU / Barcode</th><th>Prices</th><th>Stock</th></tr>
+                                <tr>
+                                    <th className="py-3">Variant</th>
+                                    <th>SKU / Barcode</th>
+                                    <th>Prices</th>
+                                    <th>Stock</th>
+                                    <th className="text-right py-3">Actions</th>
+                                </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {product.variants.map((variant) => (
@@ -39,6 +77,14 @@ export default function Show({ product, units }) {
                                         <td><p>{variant.sku}</p><p className="text-xs text-slate-400">{variant.barcodes[0]?.barcode ?? 'No barcode'}</p></td>
                                         <td><p>Sale: {money(variant.sale_price)}</p><p className="text-xs text-slate-400">Cost: {money(variant.purchase_price)}</p></td>
                                         <td className="font-semibold">{quantity(variant.stock_balances.reduce((sum, row) => sum + Number(row.quantity), 0))}</td>
+                                        <td className="py-4 text-right">
+                                            <button
+                                                onClick={() => handleEditVariantClick(variant)}
+                                                className="text-xs font-semibold text-emerald-650 hover:text-emerald-900 transition-colors cursor-pointer mr-3"
+                                            >
+                                                Edit
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -51,6 +97,109 @@ export default function Show({ product, units }) {
                     <ConversionForm productId={product.id} units={units} conversions={product.unit_conversions} />
                 </div>
             </section>
+
+            {editingVariant && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity">
+                    <div className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl animate-scale-up">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                            <h3 className="text-lg font-bold text-slate-800">Edit Variant</h3>
+                            <button
+                                onClick={() => setEditingVariant(null)}
+                                className="text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <form onSubmit={submitEditVariant} className="space-y-4">
+                            <label className="block text-sm font-medium">
+                                Variant Name
+                                <input
+                                    type="text"
+                                    required
+                                    value={editForm.data.name}
+                                    onChange={(e) => editForm.setData('name', e.target.value)}
+                                    className={inputClass}
+                                />
+                                {editForm.errors.name && <span className="text-xs text-red-650">{editForm.errors.name}</span>}
+                            </label>
+                            <label className="block text-sm font-medium">
+                                SKU (Optional)
+                                <input
+                                    type="text"
+                                    value={editForm.data.sku}
+                                    onChange={(e) => editForm.setData('sku', e.target.value)}
+                                    className={inputClass}
+                                />
+                                {editForm.errors.sku && <span className="text-xs text-red-650">{editForm.errors.sku}</span>}
+                            </label>
+                            <label className="block text-sm font-medium">
+                                Barcode (Optional)
+                                <input
+                                    type="text"
+                                    value={editForm.data.barcode}
+                                    onChange={(e) => editForm.setData('barcode', e.target.value)}
+                                    className={inputClass}
+                                />
+                                {editForm.errors.barcode && <span className="text-xs text-red-650">{editForm.errors.barcode}</span>}
+                            </label>
+                            <label className="block text-sm font-medium">
+                                Purchase Price
+                                <input
+                                    type="number"
+                                    step="any"
+                                    required
+                                    value={editForm.data.purchase_price}
+                                    onChange={(e) => editForm.setData('purchase_price', e.target.value)}
+                                    className={inputClass}
+                                />
+                                {editForm.errors.purchase_price && <span className="text-xs text-red-650">{editForm.errors.purchase_price}</span>}
+                            </label>
+                            <label className="block text-sm font-medium">
+                                Sale Price
+                                <input
+                                    type="number"
+                                    step="any"
+                                    required
+                                    value={editForm.data.sale_price}
+                                    onChange={(e) => editForm.setData('sale_price', e.target.value)}
+                                    className={inputClass}
+                                />
+                                {editForm.errors.sale_price && <span className="text-xs text-red-650">{editForm.errors.sale_price}</span>}
+                            </label>
+                            <label className="block text-sm font-medium">
+                                Reorder Level
+                                <input
+                                    type="number"
+                                    step="any"
+                                    required
+                                    value={editForm.data.reorder_level}
+                                    onChange={(e) => editForm.setData('reorder_level', e.target.value)}
+                                    className={inputClass}
+                                />
+                                {editForm.errors.reorder_level && <span className="text-xs text-red-650">{editForm.errors.reorder_level}</span>}
+                            </label>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingVariant(null)}
+                                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={editForm.processing}
+                                    className="w-full rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-60 cursor-pointer"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

@@ -184,6 +184,14 @@ class RegisterController extends Controller
                 'normal_balance' => 'debit',
                 'is_system' => true,
             ]);
+            $tenant->accounts()->create([
+                'parent_id' => $expenses->id,
+                'code' => '5300',
+                'name' => 'Staff Salaries',
+                'type' => Account::TYPE_EXPENSE,
+                'normal_balance' => 'debit',
+                'is_system' => true,
+            ]);
 
             return $user;
         });

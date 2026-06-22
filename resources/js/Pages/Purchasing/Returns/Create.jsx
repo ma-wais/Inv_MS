@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
+import FloatingInput from '../../../Components/FloatingInput';
 
 export default function Create({ purchase }) {
     const form = useForm({
@@ -26,41 +27,69 @@ export default function Create({ purchase }) {
         <AuthenticatedLayout title={`Return ${purchase.number}`}>
             <Head title={`Return ${purchase.number}`} />
 
-            <form onSubmit={submit} className="space-y-6">
-                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                        <Field label="Return date"><Input type="date" value={form.data.return_date} onChange={(v) => form.setData('return_date', v)} /></Field>
+            <form onSubmit={submit} className="space-y-4">
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <FloatingInput
+                            label="Return Date"
+                            type="date"
+                            value={form.data.return_date}
+                            onChange={(e) => form.setData('return_date', e.target.value)}
+                            required
+                            error={form.errors.return_date}
+                        />
                     </div>
-                    <div className="mt-6 space-y-4">
+
+                    <div className="mt-4 space-y-3">
                         {purchase.items.map((item, index) => (
-                            <div key={item.id} className="grid gap-3 rounded-xl border border-slate-100 p-4 lg:grid-cols-4">
+                            <div key={item.id} className="grid gap-3 rounded-xl border border-slate-100 p-4 lg:grid-cols-4 items-center bg-slate-50/30">
                                 <div>
-                                    <p className="font-medium">{item.variant.product.name}</p>
-                                    <p className="text-xs text-slate-400">{item.variant.sku}</p>
-                                    <p className="text-xs text-slate-400">Received: {item.received_quantity}</p>
+                                    <p className="font-semibold text-slate-800 text-sm">{item.variant.product.name}</p>
+                                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">{item.variant.sku}</p>
+                                    <p className="text-[10px] text-slate-500 mt-0.5">Received Qty: {item.received_quantity}</p>
                                 </div>
-                                <Input type="number" step="any" value={form.data.items[index].quantity} onChange={(v) => setItem(index, 'quantity', v)} placeholder="Return qty" />
-                                <div className="text-sm text-slate-500">Cost: {money(item.unit_cost)}</div>
-                                <div className="text-sm text-slate-500">Max return: {money(Number(item.received_quantity) - Number(item.returned_quantity))}</div>
+                                <FloatingInput
+                                    label="Return Qty"
+                                    type="number"
+                                    step="any"
+                                    value={form.data.items[index].quantity}
+                                    onChange={(e) => setItem(index, 'quantity', e.target.value)}
+                                    required
+                                />
+                                <div className="text-xs text-slate-500 font-medium">Cost: PKR {money(item.unit_cost)}</div>
+                                <div className="text-xs text-slate-500 font-medium">Max Returnable: {Number(item.received_quantity) - Number(item.returned_quantity)}</div>
                             </div>
                         ))}
                     </div>
-                    <label className="mt-5 block text-sm font-medium">
-                        Notes
-                        <textarea value={form.data.notes} onChange={(e) => form.setData('notes', e.target.value)} className={`${inputClass} min-h-24`} />
-                    </label>
+
+                    {/* Compact Notes Textarea */}
+                    <div className="relative mt-4 w-full">
+                        <textarea
+                            id="notes"
+                            value={form.data.notes}
+                            onChange={(e) => form.setData('notes', e.target.value)}
+                            placeholder=" "
+                            className="peer block w-full rounded-xl border border-slate-200 bg-white px-4 pb-2 pt-5 text-sm text-slate-800 outline-none transition-all focus:border-emerald-500 min-h-16"
+                        />
+                        <label
+                            htmlFor="notes"
+                            className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-slate-400 duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
+                        >
+                            Notes
+                        </label>
+                        {form.errors.notes && <p className="mt-1 text-xs text-red-600">{form.errors.notes}</p>}
+                    </div>
                 </section>
 
                 <div className="flex gap-3">
-                    <button disabled={form.processing} className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white disabled:opacity-60">Post return</button>
-                    <Link href={`/purchases/${purchase.id}`} className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold">Cancel</Link>
+                    <button disabled={form.processing} className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors cursor-pointer">Post return</button>
+                    <Link href={`/purchases/${purchase.id}`} className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold hover:bg-slate-50 transition-colors">Cancel</Link>
                 </div>
             </form>
         </AuthenticatedLayout>
     );
 }
 
-function Field({ label, children }) { return <label className="block text-sm font-medium">{label}{children}</label>; }
-function Input({ value, onChange, type = 'text', step, placeholder }) { return <input type={type} step={step} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} className={inputClass} />; }
-function money(value) { return Number(value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-const inputClass = 'mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500';
+function money(value) {
+    return Number(value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}

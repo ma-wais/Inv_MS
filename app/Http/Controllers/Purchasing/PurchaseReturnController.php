@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Purchasing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Purchase;
+use App\Models\PurchaseReturn;
 use App\Services\Purchasing\PurchaseService;
 use App\Support\Auditing\Audit;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +14,16 @@ use Inertia\Response;
 
 class PurchaseReturnController extends Controller
 {
+    public function index(): Response
+    {
+        return Inertia::render('Purchasing/Returns/Index', [
+            'returns' => PurchaseReturn::query()
+                ->with(['supplier:id,name', 'purchase:id,number', 'warehouse:id,name'])
+                ->latest('return_date')
+                ->paginate(20),
+        ]);
+    }
+
     public function create(Purchase $purchase): Response
     {
         return Inertia::render('Purchasing/Returns/Create', [
@@ -34,5 +45,21 @@ class PurchaseReturnController extends Controller
         $audit->record('purchase.return.created', $return, null, $return->toArray());
 
         return redirect()->route('purchases.show', $purchase)->with('status', 'Purchase return posted.');
+    }
+
+    public function show(int $id): Response
+    {
+        $return = PurchaseReturn::query()
+            ->with([
+                'supplier',
+                'warehouse',
+                'purchase:id,number',
+                'items.variant.product.baseUnit',
+            ])
+            ->findOrFail($id);
+
+        return Inertia::render('Purchasing/Returns/Show', [
+            'returnDoc' => $return,
+        ]);
     }
 }

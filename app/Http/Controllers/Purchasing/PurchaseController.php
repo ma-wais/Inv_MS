@@ -17,13 +17,61 @@ use Inertia\Response;
 
 class PurchaseController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->input('search'));
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $sort = $request->input('sort', 'id');
+        $direction = $request->input('direction', 'desc');
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'desc';
+        }
+
+        $query = Purchase::query()
+            ->with(['supplier:id,name', 'warehouse:id,name', 'items.variant'])
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('number', 'like', "%{$search}%")
+                      ->orWhereHas('supplier', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                      ->orWhereHas('warehouse', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+                });
+            })
+            ->when($startDate, function ($query, $startDate) {
+                $query->whereDate('purchase_date', '>=', $startDate);
+            })
+            ->when($endDate, function ($query, $endDate) {
+                $query->whereDate('purchase_date', '<=', $endDate);
+            });
+
+        // Apply sorting
+        if ($sort === 'number') {
+            $query->orderBy('number', $direction);
+        } elseif ($sort === 'supplier') {
+            $query->leftJoin('suppliers', 'purchases.supplier_id', '=', 'suppliers.id')
+                ->select('purchases.*')
+                ->orderBy('suppliers.name', $direction);
+        } elseif ($sort === 'warehouse') {
+            $query->leftJoin('warehouses', 'purchases.warehouse_id', '=', 'warehouses.id')
+                ->select('purchases.*')
+                ->orderBy('warehouses.name', $direction);
+        } elseif ($sort === 'total') {
+            $query->orderBy('grand_total', $direction);
+        } elseif ($sort === 'outstanding') {
+            $query->orderByRaw('(grand_total - paid_total) ' . $direction);
+        } else {
+            $query->orderBy('purchases.id', $direction);
+        }
+
         return Inertia::render('Purchasing/Purchases/Index', [
-            'purchases' => Purchase::query()
-                ->with(['supplier:id,name', 'warehouse:id,name'])
-                ->latest('purchase_date')
-                ->paginate(20),
+            'purchases' => $query->paginate(20)->withQueryString(),
+            'filters' => [
+                'search' => $search,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'sort' => $sort,
+                'direction' => $direction,
+            ]
         ]);
     }
 

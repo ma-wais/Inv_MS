@@ -86,7 +86,7 @@ class OperationalReportService
                     ->where('product_batch_id', $batch->id)
                     ->sum('quantity');
 
-                $daysToExpiry = now()->diffInDays($batch->expires_at, false);
+                $daysToExpiry = $batch->expires_at ? now()->diffInDays($batch->expires_at, false) : null;
 
                 return [
                     'id' => $batch->id,
@@ -94,10 +94,10 @@ class OperationalReportService
                     'sku' => $batch->variant->sku,
                     'variant_name' => $batch->variant->name,
                     'product_name' => $batch->variant->product->name,
-                    'expires_at' => $batch->expires_at->toDateString(),
-                    'days_to_expiry' => (int) $daysToExpiry,
+                    'expires_at' => $batch->expires_at ? $batch->expires_at->toDateString() : 'N/A',
+                    'days_to_expiry' => $daysToExpiry !== null ? (int) $daysToExpiry : '—',
                     'stock_quantity' => $stockQuantity,
-                    'status' => $daysToExpiry < 0 ? 'expired' : ($daysToExpiry <= 90 ? 'expiring_soon' : 'good'),
+                    'status' => $daysToExpiry === null ? 'good' : ($daysToExpiry < 0 ? 'expired' : ($daysToExpiry <= 90 ? 'expiring_soon' : 'good')),
                 ];
             })
             ->values();

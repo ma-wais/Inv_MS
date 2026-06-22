@@ -61,7 +61,7 @@ class MultiShopTest extends TestCase
         $this->assertDatabaseHas('units', ['tenant_id' => $tenant->id, 'symbol' => 'L']);
 
         // Assert Chart of Accounts seeding
-        $this->assertSame(13, Account::where('tenant_id', $tenant->id)->count()); // 5 headers + 8 default accounts
+        $this->assertSame(14, Account::where('tenant_id', $tenant->id)->count()); // 5 headers + 9 default accounts
         $this->assertDatabaseHas('accounts', ['tenant_id' => $tenant->id, 'code' => '1100', 'name' => 'Cash on Hand']);
         $this->assertDatabaseHas('accounts', ['tenant_id' => $tenant->id, 'code' => '4100', 'name' => 'Sales Revenue']);
 
@@ -130,4 +130,158 @@ class MultiShopTest extends TestCase
         $response3->assertRedirect();
         $this->assertSame('active', $tenant->fresh()->status);
     }
+
+    public function test_super_admin_can_create_and_update_tenant(): void
+    {
+        $superAdmin = User::create([
+            'name' => 'Super Admin',
+            'email' => 'admin@test.local',
+            'password' => Hash::make('password'),
+            'is_super_admin' => true,
+        ]);
+
+        // Create Tenant
+        $response = $this->actingAs($superAdmin)
+            ->post('/super-admin/tenants', [
+                'name' => 'Fancy Store',
+                'slug' => 'fancy-store',
+                'phone' => '090078601',
+                'currency' => 'USD',
+                'timezone' => 'America/New_York',
+            ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('tenants', [
+            'name' => 'Fancy Store',
+            'slug' => 'fancy-store',
+            'phone' => '090078601',
+            'currency' => 'USD',
+            'timezone' => 'America/New_York',
+        ]);
+
+        $tenant = Tenant::where('slug', 'fancy-store')->firstOrFail();
+
+        // Assert defaults seeded
+        $this->assertDatabaseHas('branches', ['tenant_id' => $tenant->id, 'name' => 'Main Branch']);
+        $this->assertDatabaseHas('warehouses', ['tenant_id' => $tenant->id, 'name' => 'Main Warehouse']);
+        $this->assertDatabaseHas('units', ['tenant_id' => $tenant->id, 'symbol' => 'pc']);
+        $this->assertDatabaseHas('accounts', ['tenant_id' => $tenant->id, 'code' => '1100', 'name' => 'Cash on Hand']);
+
+        // Update Tenant
+        $response2 = $this->actingAs($superAdmin)
+            ->put("/super-admin/tenants/{$tenant->id}", [
+                'name' => 'Fancy Store Updated',
+                'phone' => '111222333',
+                'currency' => 'EUR',
+                'timezone' => 'UTC',
+            ]);
+
+        $response2->assertRedirect();
+        $this->assertDatabaseHas('tenants', [
+            'id' => $tenant->id,
+            'name' => 'Fancy Store Updated',
+            'phone' => '111222333',
+            'currency' => 'EUR',
+            'timezone' => 'UTC',
+        ]);
+    }
+
+    public function test_super_admin_can_manage_users_and_shop_linkage(): void
+    {
+        $superAdmin = User::create([
+            'name' => 'Super Admin',
+            'email' => 'admin@test.local',
+            'password' => Hash::make('password'),
+            'is_super_admin' => true,
+        ]);
+
+        // Get users list
+        $response = $this->actingAs($superAdmin)->get('/super-admin/users');
+        $response->assertOk();
+
+        // Create User
+        $response2 = $this->actingAs($superAdmin)
+            ->post('/super-admin/users', [
+                'name' => 'Shop Manager',
+                'email' => 'manager@test.local',
+                'password' => 'password123',
+                'is_super_admin' => false,
+            ]);
+
+        $response2->assertRedirect();
+        $this->assertDatabaseHas('users', [
+            'name' => 'Shop Manager',
+            'email' => 'manager@test.local',
+            'is_super_admin' => false,
+        ]);
+
+        $newUser = User::where('email', 'manager@test.local')->firstOrFail();
+
+        // Update User
+        $response3 = $this->actingAs($superAdmin)
+            ->put("/super-admin/users/{$newUser->id}", [
+                'name' => 'Shop Manager Updated',
+                'email' => 'manager-new@test.local',
+                'password' => 'new-password-123',
+                'is_super_admin' => true, // Promotion to super admin
+            ]);
+
+        $response3->assertRedirect();
+        $this->assertDatabaseHas('users', [
+            'id' => $newUser->id,
+            'name' => 'Shop Manager Updated',
+            'email' => 'manager-new@test.local',
+            'is_super_admin' => true,
+        ]);
+        $this->assertTrue(Hash::check('new-password-123', $newUser->fresh()->password));
+
+        // Create a tenant
+        $tenant = Tenant::create([
+            'name' => 'Test Shop',
+            'slug' => 'test-shop',
+        ]);
+
+        // Link User to Shop
+        $response4 = $this->actingAs($superAdmin)
+            ->post("/super-admin/users/{$newUser->id}/tenants", [
+                'tenant_id' => $tenant->id,
+                'role' => 'manager',
+            ]);
+
+        $response4->assertRedirect();
+        $this->assertTrue($newUser->tenants()->where('tenants.id', $tenant->id)->exists());
+        $this->assertSame('manager', $newUser->roleFor($tenant));
+
+        // Unlink User from Shop
+        $response5 = $this->actingAs($superAdmin)
+            ->delete("/super-admin/users/{$newUser->id}/tenants/{$tenant->id}");
+
+        $response5->assertRedirect();
+        $this->assertFalse($newUser->tenants()->where('tenants.id', $tenant->id)->exists());
+
+        // Delete User
+        $response6 = $this->actingAs($superAdmin)
+            ->delete("/super-admin/users/{$newUser->id}");
+
+        $response6->assertRedirect();
+        $this->assertDatabaseMissing('users', ['id' => $newUser->id]);
+    }
+
+    public function test_super_admin_cannot_delete_themselves(): void
+    {
+        $superAdmin = User::create([
+            'name' => 'Super Admin',
+            'email' => 'admin@test.local',
+            'password' => Hash::make('password'),
+            'is_super_admin' => true,
+        ]);
+
+        $response = $this->actingAs($superAdmin)
+            ->delete("/super-admin/users/{$superAdmin->id}");
+
+        $response->assertRedirect();
+        $response->assertSessionHasErrors(['error']);
+        $this->assertDatabaseHas('users', ['id' => $superAdmin->id]);
+    }
 }
+

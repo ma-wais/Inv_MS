@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sale;
+use App\Models\SaleReturn;
 use App\Services\Sales\SaleService;
 use App\Support\Auditing\Audit;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +14,16 @@ use Inertia\Response;
 
 class SaleReturnController extends Controller
 {
+    public function index(): Response
+    {
+        return Inertia::render('Sales/Returns/Index', [
+            'returns' => SaleReturn::query()
+                ->with(['customer:id,name', 'sale:id,number', 'warehouse:id,name'])
+                ->latest('return_date')
+                ->paginate(20),
+        ]);
+    }
+
     public function create(Sale $sale): Response
     {
         return Inertia::render('Sales/Returns/Create', [
@@ -34,5 +45,21 @@ class SaleReturnController extends Controller
         $audit->record('sale.return.created', $return, null, $return->toArray());
 
         return redirect()->route('sales.show', $sale)->with('status', 'Sale return posted.');
+    }
+
+    public function show(int $id): Response
+    {
+        $return = SaleReturn::query()
+            ->with([
+                'customer',
+                'warehouse',
+                'sale:id,number',
+                'items.variant.product.baseUnit',
+            ])
+            ->findOrFail($id);
+
+        return Inertia::render('Sales/Returns/Show', [
+            'returnDoc' => $return,
+        ]);
     }
 }

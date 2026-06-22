@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
+import SearchableSelect from '../../../Components/SearchableSelect';
 
 export default function Create({ customers, warehouses, accounts, variants }) {
     // Local state for search & view filters
@@ -20,7 +21,7 @@ export default function Create({ customers, warehouses, accounts, variants }) {
 
     // Inertia form submission
     const form = useForm({
-        customer_id: customers[0]?.id ?? '',
+        customer_id: '',
         warehouse_id: warehouses[0]?.id ?? '',
         sale_date: new Date().toISOString().slice(0, 10),
         status: 'posted', // POS is normally posted immediately
@@ -33,7 +34,7 @@ export default function Create({ customers, warehouses, accounts, variants }) {
         // Immediate Payment options
         payment_amount: 0,
         payment_method: 'cash',
-        payment_account_id: accounts[0]?.id ?? '',
+        payment_account_id: null,
         payment_reference: '',
     });
 
@@ -56,24 +57,62 @@ export default function Create({ customers, warehouses, accounts, variants }) {
         return ['all', ...Array.from(list)];
     }, [variants]);
 
-    // Filter product variants based on warehouse stock, search, and category
-    const filteredVariants = useMemo(() => {
-        return variants.filter(v => {
-            const matchesSearch = v.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (v.product?.name && v.product.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                v.barcodes?.some(b => b.barcode.includes(searchQuery));
-            
-            const matchesCategory = selectedCategory === 'all' || v.product?.product_type === selectedCategory;
-            
-            return matchesSearch && matchesCategory;
+    // Group variants by product
+    const groupedProducts = useMemo(() => {
+        const groups = {};
+        variants.forEach(v => {
+            if (!v.product) return;
+            const prodId = v.product_id;
+            if (!groups[prodId]) {
+                groups[prodId] = {
+                    product: v.product,
+                    variants: [],
+                };
+            }
+            groups[prodId].variants.push(v);
         });
-    }, [variants, searchQuery, selectedCategory]);
+        return Object.values(groups);
+    }, [variants]);
 
-    // Helper to get stock of a variant in the selected warehouse
+    // Filter products based on search query and category
+    const filteredProducts = useMemo(() => {
+        return groupedProducts.filter(gp => {
+            const matchesCategory = selectedCategory === 'all' || gp.product?.product_type === selectedCategory;
+            if (!matchesCategory) return false;
+
+            const matchesSearch = searchQuery === '' || 
+                (gp.product?.name && gp.product.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                gp.variants.some(v => 
+                    v.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    (v.barcodes && v.barcodes.some(b => b.barcode.includes(searchQuery)))
+                );
+
+            return matchesSearch;
+        });
+    }, [groupedProducts, searchQuery, selectedCategory]);
+
+    const [selectedVariantIds, setSelectedVariantIds] = useState({});
+
+    const getSelectedVariant = (prodId, productVariants) => {
+        const id = selectedVariantIds[prodId];
+        if (id) {
+            return productVariants.find(v => v.id === id) || productVariants[0];
+        }
+        return productVariants[0];
+    };
+
+    // Helper to get stock of a variant in the selected warehouse, taking cart items into account
     const getStock = (variant) => {
-        const balance = variant.stockBalances?.find(b => Number(b.warehouse_id) === Number(selectedWarehouseId));
-        return balance ? Number(balance.quantity) : 0;
+        const balances = variant.stock_balances || variant.stockBalances || [];
+        const matchingBalances = balances.filter(b => Number(b.warehouse_id) === Number(selectedWarehouseId));
+        const dbQty = matchingBalances.reduce((sum, b) => sum + Number(b.quantity), 0);
+        
+        // Subtract quantities already in the cart for this variant
+        const cartItem = form.data.items.find(item => item.product_variant_id === variant.id);
+        const cartQty = cartItem ? Number(cartItem.quantity) : 0;
+        
+        return dbQty - cartQty;
     };
 
     // Cart Actions
@@ -93,7 +132,7 @@ export default function Create({ customers, warehouses, accounts, variants }) {
         } else {
             const newItem = {
                 product_variant_id: variant.id,
-                variant_name: variant.name,
+                variant_name: `${variant.product?.name || 'Unknown Product'} (${variant.name})`,
                 sku: variant.sku,
                 quantity: 1,
                 unit_price: Number(variant.sale_price),
@@ -130,6 +169,10 @@ export default function Create({ customers, warehouses, accounts, variants }) {
     // Handle POS submit
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (!form.data.customer_id) {
+            alert('Please select a customer.');
+            return;
+        }
         if (form.data.items.length === 0) {
             alert('Your cart is empty.');
             return;
@@ -236,29 +279,85 @@ export default function Create({ customers, warehouses, accounts, variants }) {
                         ))}
                     </div>
 
-                    {/* Products Grid */}
-                    <div className="flex-1 overflow-y-auto grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 pr-1">
-                        {filteredVariants.map(variant => {
-                            const stock = getStock(variant);
-                            return (
-                                <button
-                                    key={variant.id}
-                                    onClick={() => addToCart(variant)}
-                                    className="flex flex-col text-left p-3 rounded-xl border border-slate-100 bg-slate-50 hover:border-emerald-300 hover:bg-emerald-50/20 transition-all duration-200 group relative"
-                                >
-                                    <span className="text-xs uppercase tracking-wider text-slate-400 group-hover:text-emerald-600">{variant.sku}</span>
-                                    <span className="font-semibold text-slate-800 line-clamp-2 mt-1">{variant.name}</span>
-                                    <div className="mt-auto pt-2 flex items-center justify-between">
-                                        <span className="text-sm font-bold text-slate-900">PKR {Number(variant.sale_price).toLocaleString()}</span>
-                                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
-                                            stock <= 0 ? 'bg-red-100 text-red-800' : 'bg-slate-200 text-slate-700'
-                                        }`}>
-                                            Stock: {stock}
-                                        </span>
-                                    </div>
-                                </button>
-                            );
-                        })}
+                    {/* Products Table/List */}
+                    <div className="flex-1 overflow-y-auto pr-1">
+                        <table className="w-full text-left text-sm border-collapse">
+                            <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200 sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-4 py-3 font-semibold">SKU</th>
+                                    <th className="px-4 py-3 font-semibold">Product Name</th>
+                                    <th className="px-4 py-3 font-semibold">Category</th>
+                                    <th className="px-4 py-3 font-semibold text-right">Price</th>
+                                    <th className="px-4 py-3 font-semibold text-center">Stock</th>
+                                    <th className="px-4 py-3 font-semibold text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 bg-white">
+                                {filteredProducts.map(gp => {
+                                    const variant = getSelectedVariant(gp.product.id, gp.variants);
+                                    const stock = getStock(variant);
+                                    return (
+                                        <tr key={gp.product.id} className="hover:bg-slate-50/50 transition-colors">
+                                            <td className="px-4 py-3 font-mono text-xs text-slate-500 uppercase tracking-wider">{variant.sku}</td>
+                                            <td className="px-4 py-3">
+                                                <div className="font-semibold text-slate-800">
+                                                    {gp.product.name}
+                                                </div>
+                                                {gp.variants.length > 1 ? (
+                                                    <select
+                                                        value={variant.id}
+                                                        onChange={(e) => {
+                                                            const val = Number(e.target.value);
+                                                            setSelectedVariantIds(prev => ({ ...prev, [gp.product.id]: val }));
+                                                        }}
+                                                        className="mt-1 text-xs rounded-lg border border-slate-200 bg-white px-2 py-1 outline-none focus:border-emerald-500 cursor-pointer font-medium text-slate-700"
+                                                    >
+                                                        {gp.variants.map(v => (
+                                                            <option key={v.id} value={v.id}>{v.name}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <div className="text-xs text-slate-400 font-medium">
+                                                        Variant: {variant.name}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600 uppercase">
+                                                    {gp.product.product_type || 'Standard'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-right font-bold text-slate-955">
+                                                PKR {Number(variant.sale_price).toLocaleString()}
+                                            </td>
+                                            <td className="px-4 py-3 text-center">
+                                                <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold leading-5 ${
+                                                    stock <= 0 ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'
+                                                }`}>
+                                                    {stock}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-right">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => addToCart(variant)}
+                                                    className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 text-xs transition-colors shadow-sm cursor-pointer"
+                                                >
+                                                    + Add
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {filteredProducts.length === 0 && (
+                                    <tr>
+                                        <td colSpan="6" className="px-4 py-12 text-center text-slate-400 font-medium">
+                                            No matching products found.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -289,13 +388,14 @@ export default function Create({ customers, warehouses, accounts, variants }) {
 
                         {/* Customer select */}
                         <div className="mt-3">
-                            <select
+                            <SearchableSelect
+                                label="Select Customer"
                                 value={form.data.customer_id}
                                 onChange={(e) => form.setData('customer_id', e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                {customers.map(c => <option key={c.id} value={c.id}>{c.name} {c.phone ? `(${c.phone})` : ''}</option>)}
-                            </select>
+                                options={customers.map(c => ({ value: c.id, label: `${c.name} ${c.phone ? `(${c.phone})` : ''}` }))}
+                                required
+                                empty="-- Select Customer --"
+                            />
                         </div>
                     </div>
 

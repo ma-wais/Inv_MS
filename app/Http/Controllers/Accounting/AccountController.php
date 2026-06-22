@@ -14,9 +14,52 @@ class AccountController extends Controller
 {
     public function index(): Response
     {
+        $accounts = Account::query()
+            ->with('parent')
+            ->orderBy('code')
+            ->get()
+            ->map(function (Account $account) {
+                $sums = \Illuminate\Support\Facades\DB::table('journal_lines')
+                    ->where('account_id', $account->id)
+                    ->selectRaw('COALESCE(SUM(debit), 0) as total_debit, COALESCE(SUM(credit), 0) as total_credit')
+                    ->first();
+
+                $debit = (float) $sums->total_debit;
+                $credit = (float) $sums->total_credit;
+                $balance = 0.0;
+                $displayDebit = 0.0;
+                $displayCredit = 0.0;
+
+                if ($account->normal_balance === 'debit') {
+                    $balance = $debit - $credit;
+                    if ($balance >= 0) {
+                        $displayDebit = $balance;
+                    } else {
+                        $displayCredit = abs($balance);
+                    }
+                } else {
+                    $balance = $credit - $debit;
+                    if ($balance >= 0) {
+                        $displayCredit = $balance;
+                    } else {
+                        $displayDebit = abs($balance);
+                    }
+                }
+
+                $account->debit_balance = $displayDebit;
+                $account->credit_balance = $displayCredit;
+                return $account;
+            });
+
         return Inertia::render('Accounting/Accounts/Index', [
+            'accounts' => $accounts,
+        ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('Accounting/Accounts/Create', [
             'accounts' => Account::query()
-                ->with('parent')
                 ->orderBy('code')
                 ->get(),
         ]);
@@ -50,6 +93,6 @@ class AccountController extends Controller
 
         $audit->record('account.created', $account, null, $account->toArray());
 
-        return back()->with('status', 'Account created.');
+        return redirect()->route('accounts.index')->with('status', 'Account created.');
     }
 }

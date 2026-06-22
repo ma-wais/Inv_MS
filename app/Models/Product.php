@@ -12,7 +12,7 @@ class Product extends Model
 
     protected $fillable = [
         'tenant_id', 'category_id', 'brand_id', 'base_unit_id', 'name', 'slug', 'product_type',
-        'description', 'track_batches', 'track_expiry', 'is_active', 'attributes',
+        'description', 'track_batches', 'track_expiry', 'is_active', 'attributes', 'image_path',
     ];
 
     protected function casts(): array

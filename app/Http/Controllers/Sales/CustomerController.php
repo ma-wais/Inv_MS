@@ -14,13 +14,40 @@ use Inertia\Response;
 
 class CustomerController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->input('search'));
+        $sort = $request->input('sort', 'name');
+        $direction = $request->input('direction', 'asc');
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'asc';
+        }
+
+        $query = Customer::query()
+            ->withCount(['sales', 'payments', 'returns'])
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('contact_person', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('phone', 'like', "%{$search}%")
+                      ->orWhere('code', 'like', "%{$search}%");
+                });
+            });
+
+        if (in_array($sort, ['name', 'sales_count', 'payments_count', 'opening_balance', 'code'])) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('name', $direction);
+        }
+
         return Inertia::render('Sales/Customers/Index', [
-            'customers' => Customer::query()
-                ->withCount(['sales', 'payments', 'returns'])
-                ->orderBy('name')
-                ->get(),
+            'customers' => $query->get(),
+            'filters' => [
+                'search' => $search,
+                'sort' => $sort,
+                'direction' => $direction,
+            ]
         ]);
     }
 
