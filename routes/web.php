@@ -138,6 +138,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
             Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
             Route::get('/suppliers/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
+            Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
             Route::post('/suppliers/{supplier}/payments', [SupplierPaymentController::class, 'store'])->name('supplier-payments.store');
 
             Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
@@ -156,6 +157,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
             Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
             Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+            Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
             Route::post('/customers/{customer}/payments', [CustomerPaymentController::class, 'store'])->name('customer-payments.store');
 
             Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');

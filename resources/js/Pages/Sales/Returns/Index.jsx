@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import React from 'react';
 import Pagination from '../../../Components/Pagination';
+import { formatDate } from '../../../Components/utils';
 
 export default function Index({ returns }) {
     const money = (val) => Number(val ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -39,7 +40,7 @@ export default function Index({ returns }) {
                                     </td>
                                     <td className="text-slate-700 font-medium">{ret.customer?.name ?? '—'}</td>
                                     <td className="text-slate-500 text-xs">{ret.warehouse?.name ?? '—'}</td>
-                                    <td className="text-slate-600">{ret.return_date}</td>
+                                    <td className="text-slate-600">{formatDate(ret.return_date)}</td>
                                     <td className="text-slate-800 font-medium">PKR {money(ret.total)}</td>
                                     <td className="text-right px-5 py-2">
                                         <Link

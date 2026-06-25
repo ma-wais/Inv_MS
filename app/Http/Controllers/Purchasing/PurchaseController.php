@@ -75,8 +75,58 @@ class PurchaseController extends Controller
         ]);
     }
 
+    private function incrementStringNumber(?string $string): string
+    {
+        if (!$string) {
+            return '1';
+        }
+
+        if (preg_match('/^(.*?)(\d+)$/', $string, $matches)) {
+            $prefix = $matches[1];
+            $numberStr = $matches[2];
+            $len = strlen($numberStr);
+            $nextNumber = intval($numberStr) + 1;
+            $nextNumberStr = str_pad((string) $nextNumber, $len, '0', STR_PAD_LEFT);
+            return $prefix . $nextNumberStr;
+        }
+
+        if (preg_match('/(\d+)/', $string, $matches)) {
+            $numberStr = $matches[1];
+            $len = strlen($numberStr);
+            $nextNumber = intval($numberStr) + 1;
+            $nextNumberStr = str_pad((string) $nextNumber, $len, '0', STR_PAD_LEFT);
+            return str_replace($numberStr, $nextNumberStr, $string);
+        }
+
+        return $string . '1';
+    }
+
     public function create(): Response
     {
+        $lastInvoiceNum = Purchase::query()
+            ->whereNotNull('supplier_invoice_number')
+            ->where('supplier_invoice_number', '!=', '')
+            ->latest('id')
+            ->value('supplier_invoice_number');
+
+        $nextInvoiceNum = $this->incrementStringNumber($lastInvoiceNum);
+
+        $lastBatchNum = \App\Models\ProductBatch::query()
+            ->whereNotNull('batch_number')
+            ->where('batch_number', '!=', '')
+            ->latest('id')
+            ->value('batch_number');
+
+        if (!$lastBatchNum) {
+            $lastBatchNum = \App\Models\PurchaseItem::query()
+                ->whereNotNull('batch_number')
+                ->where('batch_number', '!=', '')
+                ->latest('id')
+                ->value('batch_number');
+        }
+
+        $nextBatchNum = $this->incrementStringNumber($lastBatchNum);
+
         return Inertia::render('Purchasing/Purchases/Create', [
             'suppliers' => Supplier::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'warehouses' => Warehouse::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
@@ -85,6 +135,8 @@ class PurchaseController extends Controller
                 ->where('is_active', true)
                 ->orderBy('sku')
                 ->get(['id', 'product_id', 'name', 'sku', 'purchase_price', 'sale_price', 'reorder_level']),
+            'nextSupplierInvoiceNumber' => $nextInvoiceNum,
+            'nextBatchNumber' => $nextBatchNum,
         ]);
     }
 

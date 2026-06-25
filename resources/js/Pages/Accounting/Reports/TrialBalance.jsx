@@ -1,7 +1,16 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
+import React, { useState } from 'react';
 
-export default function TrialBalance({ trialBalance }) {
+export default function TrialBalance({ trialBalance, filters }) {
+    const [startDate, setStartDate] = useState(filters?.start_date ?? '');
+    const [endDate, setEndDate] = useState(filters?.end_date ?? '');
+
+    function handleFilterSubmit(e) {
+        e.preventDefault();
+        router.get(window.location.pathname, { start_date: startDate, end_date: endDate }, { preserveState: true });
+    }
+
     const totalDebit = trialBalance.reduce((sum, row) => sum + Number(row.debit), 0);
     const totalCredit = trialBalance.reduce((sum, row) => sum + Number(row.credit), 0);
     const difference = Math.abs(totalDebit - totalCredit);
@@ -20,6 +29,33 @@ export default function TrialBalance({ trialBalance }) {
                         <span className="text-xs font-semibold text-red-600 bg-red-50 px-3 py-1 rounded-full">Unbalanced (Diff: PKR {difference.toLocaleString()}) ❌</span>
                     )}
                 </div>
+
+                <form onSubmit={handleFilterSubmit} className="flex flex-wrap items-end gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm print:hidden">
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date From</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-slate-700"
+                        />
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date To</label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-slate-700"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-900 transition-colors cursor-pointer"
+                    >
+                        Apply Filter
+                    </button>
+                </form>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 className="text-base font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4">Trial Balance Report</h2>

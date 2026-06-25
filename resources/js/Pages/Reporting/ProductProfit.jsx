@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
 import ExportCSVButton from '../../Components/ExportCSVButton';
 
-export default function ProductProfit({ reportData }) {
+export default function ProductProfit({ reportData, filters }) {
+    const [startDate, setStartDate] = useState(filters?.start_date ?? '');
+    const [endDate, setEndDate] = useState(filters?.end_date ?? '');
     const [search, setSearch] = useState('');
+
+    function handleFilterSubmit(e) {
+        e.preventDefault();
+        router.get(window.location.pathname, { start_date: startDate, end_date: endDate }, { preserveState: true });
+    }
 
     const filteredData = reportData.filter(item => {
         const query = search.toLowerCase();
@@ -74,6 +81,33 @@ export default function ProductProfit({ reportData }) {
                         </button>
                     </div>
                 </div>
+
+                <form onSubmit={handleFilterSubmit} className="flex flex-wrap items-end gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm print:hidden">
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date From</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-slate-700"
+                        />
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date To</label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-slate-700"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-900 transition-colors cursor-pointer"
+                    >
+                        Apply Filter
+                    </button>
+                </form>
 
                 {/* Print Header */}
                 <div className="hidden print:block border-b border-slate-300 pb-4">

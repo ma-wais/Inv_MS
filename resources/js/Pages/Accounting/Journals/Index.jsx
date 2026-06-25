@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import Pagination from '../../../Components/Pagination';
+import { formatDate } from '../../../Components/utils';
 
 export default function Index({ entries }) {
     const { flash } = usePage().props;
@@ -22,7 +23,7 @@ export default function Index({ entries }) {
                         <div className="bg-slate-50 px-5 py-4 flex flex-wrap justify-between items-center border-b border-slate-100 gap-3">
                             <div>
                                 <span className="font-bold text-slate-800 text-base">{entry.number}</span>
-                                <span className="text-xs text-slate-400 ml-3">{entry.entry_date}</span>
+                                <span className="text-xs text-slate-400 ml-3">{formatDate(entry.entry_date)}</span>
                                 {entry.is_system && <span className="ml-3 text-[10px] bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded uppercase">Auto-posted</span>}
                             </div>
                             <div className="text-sm text-slate-500 font-medium">

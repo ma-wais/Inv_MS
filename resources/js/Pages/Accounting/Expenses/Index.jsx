@@ -3,6 +3,7 @@ import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import React from 'react';
 import FloatingInput from '../../../Components/FloatingInput';
 import SearchableSelect from '../../../Components/SearchableSelect';
+import { formatDate } from '../../../Components/utils';
 
 export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
     const { flash } = usePage().props;
@@ -147,7 +148,7 @@ export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
                             <tbody className="divide-y divide-slate-100">
                                 {expenses.map((expense) => (
                                     <tr key={expense.id} className="hover:bg-slate-50/50">
-                                        <td className="px-4 py-3 text-slate-600">{expense.expense_date}</td>
+                                        <td className="px-4 py-3 text-slate-600">{formatDate(expense.expense_date)}</td>
                                         <td className="font-semibold text-slate-800">{expense.number}</td>
                                         <td>{expense.expense_account.name}</td>
                                         <td>{expense.payment_account.name}</td>

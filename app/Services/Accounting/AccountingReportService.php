@@ -9,14 +9,23 @@ use Illuminate\Support\Facades\DB;
 
 class AccountingReportService
 {
-    public function trialBalance(): Collection
+    public function trialBalance(?string $startDate = null, ?string $endDate = null): Collection
     {
         return Account::query()
             ->get()
-            ->map(function (Account $account) {
-                $sums = DB::table('journal_lines')
-                    ->where('account_id', $account->id)
-                    ->selectRaw('COALESCE(SUM(debit), 0) as total_debit, COALESCE(SUM(credit), 0) as total_credit')
+            ->map(function (Account $account) use ($startDate, $endDate) {
+                $query = DB::table('journal_lines')
+                    ->join('journal_entries', 'journal_lines.journal_entry_id', '=', 'journal_entries.id')
+                    ->where('journal_lines.account_id', $account->id);
+
+                if ($startDate) {
+                    $query->where('journal_entries.entry_date', '>=', $startDate);
+                }
+                if ($endDate) {
+                    $query->where('journal_entries.entry_date', '<=', $endDate);
+                }
+
+                $sums = $query->selectRaw('COALESCE(SUM(journal_lines.debit), 0) as total_debit, COALESCE(SUM(journal_lines.credit), 0) as total_credit')
                     ->first();
 
                 $debit = (float) $sums->total_debit;
@@ -54,9 +63,9 @@ class AccountingReportService
             ->values();
     }
 
-    public function profitAndLoss(): array
+    public function profitAndLoss(?string $startDate = null, ?string $endDate = null): array
     {
-        $trialBalance = $this->trialBalance();
+        $trialBalance = $this->trialBalance($startDate, $endDate);
 
         $revenueItems = $trialBalance->filter(fn ($row) => $row['type'] === Account::TYPE_INCOME);
         $expenseItems = $trialBalance->filter(fn ($row) => $row['type'] === Account::TYPE_EXPENSE);
@@ -74,12 +83,20 @@ class AccountingReportService
         ];
     }
 
-    public function generalLedger(Account $account): Collection
+    public function generalLedger(Account $account, ?string $startDate = null, ?string $endDate = null): Collection
     {
-        $lines = JournalLine::query()
+        $linesQuery = JournalLine::query()
             ->with('entry')
-            ->where('account_id', $account->id)
-            ->get()
+            ->where('account_id', $account->id);
+
+        if ($startDate) {
+            $linesQuery->whereHas('entry', fn($q) => $q->where('entry_date', '>=', $startDate));
+        }
+        if ($endDate) {
+            $linesQuery->whereHas('entry', fn($q) => $q->where('entry_date', '<=', $endDate));
+        }
+
+        $lines = $linesQuery->get()
             ->sortBy(fn (JournalLine $line) => ($line->entry->entry_date->toDateString() ?? '0000-00-00').'|'.$line->entry->number)
             ->values();
 

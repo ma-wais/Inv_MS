@@ -3,11 +3,11 @@ import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import FloatingInput from '../../../Components/FloatingInput';
 import SearchableSelect from '../../../Components/SearchableSelect';
 
-export default function Create({ suppliers, warehouses, variants }) {
+export default function Create({ suppliers, warehouses, variants, nextSupplierInvoiceNumber, nextBatchNumber }) {
     const form = useForm({
         supplier_id: suppliers[0]?.id ?? '',
         warehouse_id: warehouses[0]?.id ?? '',
-        supplier_invoice_number: '',
+        supplier_invoice_number: nextSupplierInvoiceNumber ?? '',
         purchase_date: new Date().toISOString().slice(0, 10),
         due_date: '',
         status: 'draft',
@@ -16,9 +16,35 @@ export default function Create({ suppliers, warehouses, variants }) {
         shipping_total: '0',
         notes: '',
         items: [
-            { product_variant_id: variants[0]?.id ?? '', quantity: '', unit_cost: variants[0]?.purchase_price ?? '', batch_number: '', expires_at: '' },
+            { product_variant_id: variants[0]?.id ?? '', quantity: '', unit_cost: variants[0]?.purchase_price ?? '', batch_number: nextBatchNumber ?? '', expires_at: '' },
         ],
     });
+
+    function incrementStringNumber(string) {
+        if (!string) return '1';
+        const regex = /^(.*?)(\d+)$/;
+        const matches = string.match(regex);
+        if (matches) {
+            const prefix = matches[1];
+            const numberStr = matches[2];
+            const len = numberStr.length;
+            const nextNumber = parseInt(numberStr, 10) + 1;
+            const nextNumberStr = String(nextNumber).padStart(len, '0');
+            return prefix + nextNumberStr;
+        }
+        
+        const digitRegex = /(\d+)/;
+        const digitMatches = string.match(digitRegex);
+        if (digitMatches) {
+            const numberStr = digitMatches[1];
+            const len = numberStr.length;
+            const nextNumber = parseInt(numberStr, 10) + 1;
+            const nextNumberStr = String(nextNumber).padStart(len, '0');
+            return string.replace(numberStr, nextNumberStr);
+        }
+        
+        return string + '1';
+    }
 
     function submit(event) {
         event.preventDefault();
@@ -90,79 +116,102 @@ export default function Create({ suppliers, warehouses, variants }) {
                         <h2 className="font-semibold text-base text-slate-800">Items</h2>
                         <button
                             type="button"
-                            onClick={() => form.setData('items', [...form.data.items, { product_variant_id: variants[0]?.id ?? '', quantity: '', unit_cost: '', batch_number: '', expires_at: '' }])}
+                            onClick={() => {
+                                const lastItem = form.data.items[form.data.items.length - 1];
+                                const nextLineBatch = lastItem ? incrementStringNumber(lastItem.batch_number) : (nextBatchNumber ?? '');
+                                form.setData('items', [
+                                    ...form.data.items,
+                                    { product_variant_id: variants[0]?.id ?? '', quantity: '', unit_cost: '', batch_number: nextLineBatch, expires_at: '' }
+                                ]);
+                            }}
                             className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
                         >
                             + Add Line
                         </button>
                     </div>
 
-                    <div className="space-y-3">
-                        {form.data.items.map((item, index) => (
-                            <div key={index} className="grid gap-3 rounded-xl border border-slate-100 p-4 lg:grid-cols-12 items-center bg-slate-50/30">
-                                {/* Product selector */}
-                                <div className="lg:col-span-4">
-                                    <SearchableSelect
-                                        label="Product & Variant"
-                                        value={item.product_variant_id}
-                                        onChange={(e) => setItem(index, 'product_variant_id', e.target.value)}
-                                        options={variants.map((v) => ({ value: v.id, label: `${v.product.name} (${v.name}) · ${v.sku}` }))}
-                                        required
-                                    />
-                                </div>
-                                {/* Qty */}
-                                <div className="lg:col-span-2">
-                                    <FloatingInput
-                                        label="Qty"
-                                        type="number"
-                                        step="any"
-                                        value={item.quantity}
-                                        onChange={(e) => setItem(index, 'quantity', e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                {/* Cost */}
-                                <div className="lg:col-span-2">
-                                    <FloatingInput
-                                        label="Cost"
-                                        type="number"
-                                        step="any"
-                                        value={item.unit_cost}
-                                        onChange={(e) => setItem(index, 'unit_cost', e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                {/* Batch */}
-                                <div className="lg:col-span-2">
-                                    <FloatingInput
-                                        label="Batch"
-                                        value={item.batch_number}
-                                        onChange={(e) => setItem(index, 'batch_number', e.target.value)}
-                                    />
-                                </div>
-                                {/* Expiry */}
-                                <div className="lg:col-span-2 flex items-center gap-2">
-                                    <div className="flex-1">
-                                        <FloatingInput
-                                            label="Expiry"
-                                            type="date"
-                                            value={item.expires_at}
-                                            onChange={(e) => setItem(index, 'expires_at', e.target.value)}
-                                        />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => form.setData('items', form.data.items.filter((_, i) => i !== index))}
-                                        className="rounded-lg border border-red-200 p-2.5 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                                        title="Remove Line"
-                                    >
-                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="overflow-x-auto mt-4">
+                        <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr className="border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                    <th className="py-2 pr-3 w-[35%]">Product & Variant</th>
+                                    <th className="py-2 px-2 w-[12%]">Qty</th>
+                                    <th className="py-2 px-2 w-[15%]">Cost (PKR)</th>
+                                    <th className="py-2 px-2 w-[15%]">Batch #</th>
+                                    <th className="py-2 pl-2 w-[18%]">Expiry Date</th>
+                                    <th className="py-2 w-10"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {form.data.items.map((item, index) => (
+                                    <tr key={index} className="hover:bg-slate-50/50">
+                                        <td className="py-2 pr-3">
+                                            <SearchableSelect
+                                                id={`item-${index}-variant`}
+                                                name={`item-${index}-variant`}
+                                                value={item.product_variant_id}
+                                                onChange={(e) => setItem(index, 'product_variant_id', e.target.value)}
+                                                options={variants.map((v) => ({ value: v.id, label: `${v.product.name} (${v.name}) · ${v.sku}` }))}
+                                                required
+                                                dense
+                                                empty="Search variant..."
+                                            />
+                                        </td>
+                                        <td className="py-2 px-2">
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                value={item.quantity}
+                                                onChange={(e) => setItem(index, 'quantity', e.target.value)}
+                                                required
+                                                placeholder="Qty"
+                                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-2">
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                value={item.unit_cost}
+                                                onChange={(e) => setItem(index, 'unit_cost', e.target.value)}
+                                                required
+                                                placeholder="Cost"
+                                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                                            />
+                                        </td>
+                                        <td className="py-2 px-2">
+                                            <input
+                                                type="text"
+                                                value={item.batch_number}
+                                                onChange={(e) => setItem(index, 'batch_number', e.target.value)}
+                                                placeholder="Batch #"
+                                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                                            />
+                                        </td>
+                                        <td className="py-2 pl-2">
+                                            <input
+                                                type="date"
+                                                value={item.expires_at}
+                                                onChange={(e) => setItem(index, 'expires_at', e.target.value)}
+                                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                                            />
+                                        </td>
+                                        <td className="py-2 text-right">
+                                            <button
+                                                type="button"
+                                                onClick={() => form.setData('items', form.data.items.filter((_, i) => i !== index))}
+                                                className="rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                                title="Remove Line"
+                                            >
+                                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
 
                     <div className="mt-4 grid gap-4 sm:grid-cols-3">

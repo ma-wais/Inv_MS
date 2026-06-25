@@ -1,6 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import React, { useEffect } from 'react';
+import { formatDate } from '../../../Components/utils';
 
 export default function Show({ purchase, accounts }) {
     const { flash } = usePage().props;
@@ -91,8 +92,8 @@ export default function Show({ purchase, accounts }) {
                     <Card title="Document details">
                         <Row label="Purchase no." value={purchase.number} />
                         <Row label="Supplier invoice" value={purchase.supplier_invoice_number ?? '—'} />
-                        <Row label="Purchase date" value={purchase.purchase_date} />
-                        <Row label="Due date" value={purchase.due_date ?? '—'} />
+                        <Row label="Purchase date" value={formatDate(purchase.purchase_date)} />
+                        <Row label="Due date" value={formatDate(purchase.due_date)} />
                     </Card>
                     <Card title="Ledger note">
                         <p className="text-sm text-slate-500">

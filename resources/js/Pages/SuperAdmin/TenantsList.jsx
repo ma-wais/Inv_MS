@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
+import PhoneInput from '../../Components/PhoneInput';
 
 export default function TenantsList({ tenants }) {
     const [search, setSearch] = useState('');
@@ -233,16 +234,15 @@ export default function TenantsList({ tenants }) {
                                 {createForm.errors.slug && <p className="mt-1 text-xs text-red-600 font-normal">{createForm.errors.slug}</p>}
                             </label>
 
-                            <label className="block text-xs font-semibold text-slate-500 uppercase">
-                                Phone Number
-                                <input
-                                    type="text"
+                            <div className="flex flex-col gap-1">
+                                <PhoneInput
+                                    name="phone"
+                                    label="Phone Number"
                                     value={createForm.data.phone}
                                     onChange={e => createForm.setData('phone', e.target.value)}
-                                    className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-emerald-500 font-normal"
+                                    error={createForm.errors.phone}
                                 />
-                                {createForm.errors.phone && <p className="mt-1 text-xs text-red-600 font-normal">{createForm.errors.phone}</p>}
-                            </label>
+                            </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <label className="block text-xs font-semibold text-slate-500 uppercase">
@@ -320,16 +320,15 @@ export default function TenantsList({ tenants }) {
                                 {editForm.errors.name && <p className="mt-1 text-xs text-red-600 font-normal">{editForm.errors.name}</p>}
                             </label>
 
-                            <label className="block text-xs font-semibold text-slate-500 uppercase">
-                                Phone Number
-                                <input
-                                    type="text"
+                            <div className="flex flex-col gap-1">
+                                <PhoneInput
+                                    name="phone"
+                                    label="Phone Number"
                                     value={editForm.data.phone}
                                     onChange={e => editForm.setData('phone', e.target.value)}
-                                    className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-emerald-500 font-normal"
+                                    error={editForm.errors.phone}
                                 />
-                                {editForm.errors.phone && <p className="mt-1 text-xs text-red-600 font-normal">{editForm.errors.phone}</p>}
-                            </label>
+                            </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <label className="block text-xs font-semibold text-slate-500 uppercase">

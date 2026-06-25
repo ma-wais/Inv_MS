@@ -88,6 +88,22 @@ class CustomerController extends Controller
         ]);
     }
 
+    public function destroy(Customer $customer, Audit $audit): RedirectResponse
+    {
+        if ($customer->code === 'WALKIN' || strtolower($customer->name) === 'walk-in customer') {
+            return back()->withErrors(['error' => 'The default Walk-in Customer cannot be deleted.']);
+        }
+
+        if ($customer->sales()->exists() || $customer->payments()->exists() || $customer->returns()->exists()) {
+            return back()->withErrors(['error' => 'Cannot delete customer because they have transaction history.']);
+        }
+
+        $audit->record('customer.deleted', $customer, $customer->toArray(), null);
+        $customer->delete();
+
+        return redirect()->route('customers.index')->with('status', 'Customer deleted.');
+    }
+
     private function uniqueCode(string $name): string
     {
         $base = strtoupper(Str::slug($name, ''));

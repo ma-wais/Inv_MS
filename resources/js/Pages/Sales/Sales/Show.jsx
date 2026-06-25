@@ -1,6 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import React, { useEffect } from 'react';
+import { formatDate } from '../../../Components/utils';
 
 export default function Show({ sale, accounts }) {
     const { flash } = usePage().props;
@@ -84,7 +85,7 @@ export default function Show({ sale, accounts }) {
                     <Card title="Invoice Details">
                         <Row label="Sale No." value={sale.number} />
                         <Row label="Ref. Invoice" value={sale.invoice_number ?? '—'} />
-                        <Row label="Sale date" value={sale.sale_date} />
+                        <Row label="Sale date" value={formatDate(sale.sale_date)} />
                         <Row label="Notes" value={sale.notes ?? '—'} />
                     </Card>
                     <Card title="POS Context">

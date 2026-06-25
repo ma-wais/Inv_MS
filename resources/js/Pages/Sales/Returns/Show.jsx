@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import React, { useEffect } from 'react';
+import { formatDate } from '../../../Components/utils';
 
 export default function Show({ returnDoc }) {
     const { flash } = usePage().props;
@@ -48,7 +49,7 @@ export default function Show({ returnDoc }) {
                     <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 print:grid-cols-3 print:gap-2">
                         <Metric label="Return total" value={`PKR ${money(returnDoc.total)}`} />
                         <Metric label="Original sale invoice" value={returnDoc.sale?.number ?? '—'} />
-                        <Metric label="Return date" value={returnDoc.return_date} />
+                        <Metric label="Return date" value={formatDate(returnDoc.return_date)} />
                     </div>
 
                     <div className="mt-6 overflow-x-auto">
@@ -87,7 +88,7 @@ export default function Show({ returnDoc }) {
                 <div className="space-y-6 print:hidden">
                     <Card title="Return details">
                         <Row label="Return no." value={returnDoc.number} />
-                        <Row label="Return date" value={returnDoc.return_date} />
+                        <Row label="Return date" value={formatDate(returnDoc.return_date)} />
                         {returnDoc.notes && <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500 font-medium">Notes: {returnDoc.notes}</div>}
                     </Card>
                 </div>

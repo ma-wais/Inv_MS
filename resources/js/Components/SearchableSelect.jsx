@@ -12,6 +12,7 @@ export default function SearchableSelect({
     disabled = false,
     empty,
     className = '',
+    dense = false,
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
@@ -56,29 +57,39 @@ export default function SearchableSelect({
             {/* Display / Trigger */}
             <div
                 onClick={() => !disabled && setIsOpen(!isOpen)}
-                className={`relative w-full rounded-xl border border-slate-200 bg-white px-4 pb-2.5 pt-5 text-sm text-slate-800 outline-none cursor-pointer select-none transition-all min-h-[50px] flex items-center justify-between ${
-                    disabled ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : 'hover:border-slate-300'
-                } ${isOpen ? 'border-emerald-500 ring-1 ring-emerald-500' : ''} ${
-                    error ? 'border-red-300 focus:border-red-500' : ''
-                } ${className}`}
+                className={dense ? (
+                    `relative w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none cursor-pointer select-none transition-all flex items-center justify-between ${
+                        disabled ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : 'hover:border-slate-300'
+                    } ${isOpen ? 'border-emerald-500 ring-1 ring-emerald-500' : ''} ${
+                        error ? 'border-red-300 focus:border-red-500' : ''
+                    } ${className}`
+                ) : (
+                    `relative w-full rounded-xl border border-slate-200 bg-white px-4 pb-2.5 pt-5 text-sm text-slate-800 outline-none cursor-pointer select-none transition-all min-h-[50px] flex items-center justify-between ${
+                        disabled ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : 'hover:border-slate-300'
+                    } ${isOpen ? 'border-emerald-500 ring-1 ring-emerald-500' : ''} ${
+                        error ? 'border-red-300 focus:border-red-500' : ''
+                    } ${className}`
+                )}
             >
-                <span className={selectedOption ? 'text-slate-800' : 'text-slate-400'}>
-                    {selectedOption ? selectedOption.label : (isOpen ? (empty || 'Select option...') : '')}
+                <span className={`${selectedOption ? 'text-slate-800' : 'text-slate-400'} ${dense ? 'text-xs' : ''}`}>
+                    {selectedOption ? selectedOption.label : (isOpen ? (empty || 'Select option...') : (empty || 'Select...'))}
                 </span>
                 <svg className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                 </svg>
 
                 {/* Floating Label */}
-                <label
-                    className={`absolute left-4 z-10 origin-[0] transform text-xs duration-150 cursor-pointer select-none uppercase font-semibold transition-all ${
-                        selectedOption || isOpen
-                            ? 'top-2 scale-75 -translate-y-0.5 text-slate-400'
-                            : 'top-3.5 scale-100 translate-y-0 text-slate-400'
-                    } ${isOpen ? 'text-emerald-500' : ''}`}
-                >
-                    {label} {required && <span className="text-red-500">*</span>}
-                </label>
+                {!dense && (
+                    <label
+                        className={`absolute left-4 z-10 origin-[0] transform text-xs duration-150 cursor-pointer select-none uppercase font-semibold transition-all ${
+                            selectedOption || isOpen
+                                ? 'top-2 scale-75 -translate-y-0.5 text-slate-400'
+                                : 'top-3.5 scale-100 translate-y-0 text-slate-400'
+                        } ${isOpen ? 'text-emerald-500' : ''}`}
+                    >
+                        {label} {required && <span className="text-red-500">*</span>}
+                    </label>
+                )}
             </div>
 
             {/* Dropdown Panel */}

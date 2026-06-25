@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import SearchableSelect from '../../../Components/SearchableSelect';
+import PhoneInput from '../../../Components/PhoneInput';
 
-export default function Create({ customers, warehouses, accounts, variants }) {
+export default function Create({ customers, warehouses, accounts, variants, walk_in_customer_id }) {
     // Local state for search & view filters
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -21,7 +22,7 @@ export default function Create({ customers, warehouses, accounts, variants }) {
 
     // Inertia form submission
     const form = useForm({
-        customer_id: '',
+        customer_id: walk_in_customer_id ?? '',
         warehouse_id: warehouses[0]?.id ?? '',
         sale_date: new Date().toISOString().slice(0, 10),
         status: 'posted', // POS is normally posted immediately
@@ -558,12 +559,11 @@ export default function Create({ customers, warehouses, accounts, variants }) {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone number</label>
-                                <input
-                                    type="text"
+                                <PhoneInput
+                                    name="phone"
+                                    label="Phone number"
                                     value={newCustomerData.phone}
                                     onChange={(e) => setNewCustomerData({ ...newCustomerData, phone: e.target.value })}
-                                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-500"
                                 />
                             </div>
                             <div>

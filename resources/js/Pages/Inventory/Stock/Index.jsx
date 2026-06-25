@@ -1,8 +1,9 @@
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import FloatingInput from '../../../Components/FloatingInput';
 import SearchableSelect from '../../../Components/SearchableSelect';
+import Pagination from '../../../Components/Pagination';
 
 export default function Index({ balances, movements, variants, warehouses, lowStock, filters }) {
     const { flash } = usePage().props;
@@ -11,6 +12,27 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
     const [searchVal, setSearchVal] = useState(filters?.search ?? '');
     const [warehouseVal, setWarehouseVal] = useState(filters?.warehouse_id ?? '');
     const [variantVal, setProductVariantVal] = useState(filters?.product_variant_id ?? '');
+
+    // Extract unique products
+    const uniqueProducts = useMemo(() => {
+        const productMap = new Map();
+        variants.forEach(v => {
+            if (v.product) {
+                productMap.set(v.product.id, v.product);
+            }
+        });
+        return Array.from(productMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }, [variants]);
+
+    // Find matched product if searching
+    const initialSelectedProduct = useMemo(() => {
+        if (!filters?.search) return '';
+        const matched = uniqueProducts.find(p => p.name === filters.search);
+        return matched ? matched.id : '';
+    }, [filters?.search, uniqueProducts]);
+
+    const [selectedFilterProductId, setSelectedFilterProductId] = useState(initialSelectedProduct);
+    const [selectedModalProductId, setSelectedModalProductId] = useState('');
 
     // Modal state
     const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
@@ -30,6 +52,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
             onSuccess: () => {
                 adjustForm.reset('quantity', 'note');
                 setIsAdjustModalOpen(false);
+                setSelectedModalProductId('');
             }
         });
     }
@@ -47,6 +70,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
         setSearchVal('');
         setWarehouseVal('');
         setProductVariantVal('');
+        setSelectedFilterProductId('');
         router.get('/stock', {}, { preserveState: true, preserveScroll: true });
     }
 
@@ -87,15 +111,24 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
             {/* Disciplined Filter & Action Toolbar */}
             <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex flex-wrap items-center gap-3 flex-1">
-                    {/* Search Input */}
+                    {/* Product Selector */}
                     <div className="w-full sm:w-64">
-                        <input
-                            type="text"
-                            placeholder="Search product, SKU..."
-                            value={searchVal}
-                            onChange={(e) => setSearchVal(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && runFilters(searchVal, warehouseVal, variantVal)}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs outline-none focus:border-emerald-500"
+                        <SearchableSelect
+                            id="filter_product_id"
+                            name="filter_product_id"
+                            label="Product"
+                            options={uniqueProducts.map(p => ({ value: p.id, label: p.name }))}
+                            value={selectedFilterProductId}
+                            onChange={(e) => {
+                                const prodId = e.target.value;
+                                setSelectedFilterProductId(prodId);
+                                const matchedProduct = uniqueProducts.find(p => String(p.id) === String(prodId));
+                                const newSearch = matchedProduct ? matchedProduct.name : '';
+                                setSearchVal(newSearch);
+                                setProductVariantVal('');
+                                runFilters(newSearch, warehouseVal, '');
+                            }}
+                            empty="All Products"
                         />
                     </div>
                     {/* Warehouse Selector */}
@@ -106,7 +139,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                                 setWarehouseVal(e.target.value);
                                 runFilters(searchVal, e.target.value, variantVal);
                             }}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500 cursor-pointer font-medium text-slate-700"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3.5 text-xs outline-none focus:border-emerald-500 cursor-pointer font-medium text-slate-700"
                         >
                             <option value="">All Warehouses</option>
                             {warehouses.map(w => (
@@ -114,21 +147,25 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                             ))}
                         </select>
                     </div>
-                    {/* Product Variant Selector */}
-                    <div className="w-full sm:w-72">
-                        <SearchableSelect
-                            id="variantVal"
-                            name="variantVal"
-                            label="Product Variant"
-                            options={variants.map(v => ({ value: v.id, label: `${v.product.name} (${v.name}) · ${v.sku}` }))}
-                            value={variantVal}
-                            onChange={(e) => {
-                                setProductVariantVal(e.target.value);
-                                runFilters(searchVal, warehouseVal, e.target.value);
-                            }}
-                            empty="All Product Variants"
-                        />
-                    </div>
+                    {/* Product Variant Selector - Only visible when product is selected */}
+                    {selectedFilterProductId && (
+                        <div className="w-full sm:w-72">
+                            <SearchableSelect
+                                id="variantVal"
+                                name="variantVal"
+                                label="Product Variant"
+                                options={variants
+                                    .filter(v => String(v.product_id) === String(selectedFilterProductId))
+                                    .map(v => ({ value: v.id, label: `${v.name} · ${v.sku}` }))}
+                                value={variantVal}
+                                onChange={(e) => {
+                                    setProductVariantVal(e.target.value);
+                                    runFilters(searchVal, warehouseVal, e.target.value);
+                                }}
+                                empty="All Product Variants"
+                            />
+                        </div>
+                    )}
                     
                     {/* Filter Action Buttons */}
                     <div className="flex items-center gap-2">
@@ -169,7 +206,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                             <h2 className="font-bold text-slate-800 text-sm">Current balances</h2>
                             <p className="text-[11px] text-slate-500">Low-stock rows are highlighted in amber.</p>
                         </div>
-                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">{balances.length} items</span>
+                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">{(balances.total ?? balances.data.length)} items</span>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
@@ -182,7 +219,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {balances.map((balance) => {
+                                {balances.data.map((balance) => {
                                     const low = Number(balance.quantity) <= Number(balance.variant.reorder_level);
                                     return (
                                         <tr key={balance.id} className={`hover:bg-slate-50/30 ${low ? 'bg-amber-50/50' : ''}`}>
@@ -202,7 +239,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                                         </tr>
                                     );
                                 })}
-                                {balances.length === 0 && (
+                                {balances.data.length === 0 && (
                                     <tr>
                                         <td colSpan="4" className="px-5 py-8 text-center text-xs text-slate-400">
                                             No stock balances match the search criteria.
@@ -212,6 +249,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                             </tbody>
                         </table>
                     </div>
+                    <Pagination links={balances.links} />
                 </div>
 
                 {/* Movements Ledger Card */}
@@ -230,7 +268,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {movements.map((movement) => (
+                                {movements.data.map((movement) => (
                                     <tr key={movement.id} className="hover:bg-slate-50/30 text-xs">
                                         <td className="px-4 py-3">
                                             <div className="flex flex-wrap items-center gap-1.5">
@@ -254,7 +292,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                                         </td>
                                     </tr>
                                 ))}
-                                {movements.length === 0 && (
+                                {movements.data.length === 0 && (
                                     <tr>
                                         <td colSpan="3" className="px-4 py-8 text-center text-xs text-slate-400">
                                             No recent movements match the search criteria.
@@ -264,6 +302,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                             </tbody>
                         </table>
                     </div>
+                    <Pagination links={movements.links} />
                 </div>
             </div>
 
@@ -281,6 +320,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                                 onClick={() => {
                                     adjustForm.clearErrors();
                                     setIsAdjustModalOpen(false);
+                                    setSelectedModalProductId('');
                                 }}
                                 className="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer"
                             >
@@ -300,16 +340,35 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                             />
 
                             <SearchableSelect
-                                id="product_variant_id"
-                                name="product_variant_id"
-                                label="Product Variant"
+                                id="modal_product_id"
+                                name="modal_product_id"
+                                label="Product"
                                 required
-                                options={variantOptions}
-                                value={adjustForm.data.product_variant_id}
-                                onChange={(e) => adjustForm.setData('product_variant_id', e.target.value)}
-                                error={adjustForm.errors.product_variant_id}
-                                empty="Select product variant..."
+                                options={uniqueProducts.map(p => ({ value: p.id, label: p.name }))}
+                                value={selectedModalProductId}
+                                onChange={(e) => {
+                                    const prodId = e.target.value;
+                                    setSelectedModalProductId(prodId);
+                                    adjustForm.setData('product_variant_id', '');
+                                }}
+                                empty="Select product..."
                             />
+
+                            {selectedModalProductId && (
+                                <SearchableSelect
+                                    id="product_variant_id"
+                                    name="product_variant_id"
+                                    label="Product Variant"
+                                    required
+                                    options={variants
+                                        .filter(v => String(v.product_id) === String(selectedModalProductId))
+                                        .map(v => ({ value: v.id, label: `${v.name} · ${v.sku}` }))}
+                                    value={adjustForm.data.product_variant_id}
+                                    onChange={(e) => adjustForm.setData('product_variant_id', e.target.value)}
+                                    error={adjustForm.errors.product_variant_id}
+                                    empty="Select product variant..."
+                                />
+                            )}
 
                             <FloatingInput
                                 id="quantity"
@@ -353,6 +412,7 @@ export default function Index({ balances, movements, variants, warehouses, lowSt
                                     onClick={() => {
                                         adjustForm.clearErrors();
                                         setIsAdjustModalOpen(false);
+                                        setSelectedModalProductId('');
                                     }}
                                     className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                                 >

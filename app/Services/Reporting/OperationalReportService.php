@@ -38,13 +38,19 @@ class OperationalReportService
             ->values();
     }
 
-    public function productProfit(): Collection
+    public function productProfit(?string $startDate = null, ?string $endDate = null): Collection
     {
         // Get all sold items from posted sales
         return SaleItem::query()
             ->select('product_variant_id', DB::raw('SUM(quantity) as quantity_sold'), DB::raw('SUM(line_total) as revenue'))
-            ->whereHas('sale', function ($query) {
+            ->whereHas('sale', function ($query) use ($startDate, $endDate) {
                 $query->where('status', 'posted');
+                if ($startDate) {
+                    $query->whereDate('sale_date', '>=', $startDate);
+                }
+                if ($endDate) {
+                    $query->whereDate('sale_date', '<=', $endDate);
+                }
             })
             ->groupBy('product_variant_id')
             ->with(['variant.product'])

@@ -288,23 +288,6 @@ export default function AuthenticatedLayout({ title, children }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
-                    {/* Collapse/Expand button for desktop */}
-                    <button
-                        type="button"
-                        onClick={toggleCompressed}
-                        className="hidden lg:block text-slate-300 hover:text-white p-1 rounded-md hover:bg-white/5 transition-colors focus:outline-hidden cursor-pointer"
-                        title={isCompressed ? "Expand Sidebar" : "Collapse Sidebar"}
-                    >
-                        {isCompressed ? (
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                            </svg>
-                        ) : (
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7M19 19l-7-7 7-7" />
-                            </svg>
-                        )}
-                    </button>
                 </div>
 
                 <nav className="flex-1 space-y-3">
@@ -432,25 +415,81 @@ export default function AuthenticatedLayout({ title, children }) {
                     })}
                 </nav>
 
-                {!isCompressed && auth.tenant && (
-                     <div className="mt-auto border-t border-slate-800/50 pt-4 px-2 text-xs text-slate-300">
-                        <p className="font-semibold text-slate-200">{auth.tenant.name}</p>
-                        <p className="mt-1 leading-relaxed text-[11px] text-slate-300">
-                            Manage inventory, sales, purchases, and ledgers in one workspace.
-                        </p>
-                    </div>
-                )}
+                {/* Bottom User Info & Logout Section */}
+                <div className="mt-auto border-t border-slate-800/50 pt-4 px-2 flex flex-col gap-3">
+                    {/* Tenant Info if expanded */}
+                    {!isCompressed && auth.tenant && (
+                        <div className="text-[11px] text-slate-400">
+                            <span className="font-semibold text-slate-200">{auth.tenant.name}</span>
+                            <span className="mx-1.5">•</span>
+                            <span>Active Shop</span>
+                        </div>
+                    )}
+
+                    {/* User profile details and logout */}
+                    {isCompressed ? (
+                        <div className="flex flex-col items-center gap-4">
+                            <button
+                                type="button"
+                                onClick={() => router.post('/logout')}
+                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors cursor-pointer"
+                                title="Logout"
+                            >
+                                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-between gap-2 bg-slate-900/40 rounded-xl p-2.5 border border-slate-800/30">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-slate-200 truncate">{auth.user.name}</p>
+                                <p className="text-[10px] text-slate-400 truncate">{auth.user.email}</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => router.post('/logout')}
+                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors cursor-pointer"
+                                title="Logout"
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
+                </div>
             </aside>
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0">
                 <header className="sticky top-0 z-30 border-b border-slate-200/85 bg-slate-50/90 backdrop-blur-md print:hidden">
                     <div className="flex min-h-16 items-center justify-between gap-4 px-5 lg:px-8">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                {auth.tenant?.name ?? 'Shop Manager'}
-                            </span>
-                            <h1 className="text-sm font-semibold text-slate-800">{title}</h1>
+                        <div className="flex items-center gap-3">
+                            {/* Collapse/Expand button for desktop */}
+                            <button
+                                type="button"
+                                onClick={toggleCompressed}
+                                className="hidden lg:block text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 transition-colors focus:outline-hidden cursor-pointer"
+                                title={isCompressed ? "Expand Sidebar" : "Collapse Sidebar"}
+                            >
+                                {isCompressed ? (
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                                    </svg>
+                                ) : (
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7M19 19l-7-7 7-7" />
+                                    </svg>
+                                )}
+                            </button>
+
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                    {auth.tenant?.name ?? 'Shop Manager'}
+                                </span>
+                                <h1 className="text-sm font-semibold text-slate-800">{title}</h1>
+                            </div>
                         </div>
 
                         {/* Center Clock Widget */}

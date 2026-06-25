@@ -1,11 +1,12 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import React from 'react';
+import { formatDate } from '../../../Components/utils';
 import FloatingInput from '../../../Components/FloatingInput';
 import SearchableSelect from '../../../Components/SearchableSelect';
 
 export default function Show({ supplier, ledger, purchases, payments, returns: supplierReturns }) {
-    const { flash } = usePage().props;
+    const { flash, errors } = usePage().props;
     const form = useForm({
         purchase_id: '',
         payment_date: new Date().toISOString().slice(0, 10),
@@ -14,6 +15,12 @@ export default function Show({ supplier, ledger, purchases, payments, returns: s
         reference: '',
         notes: '',
     });
+
+    function handleDelete() {
+        if (confirm('Are you sure you want to delete this supplier? This action cannot be undone.')) {
+            router.delete(`/suppliers/${supplier.id}`);
+        }
+    }
 
     function submit(event) {
         event.preventDefault();
@@ -37,6 +44,7 @@ export default function Show({ supplier, ledger, purchases, payments, returns: s
             <Head title={supplier.name} />
 
             {flash.status && <div className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{flash.status}</div>}
+            {errors?.error && <div className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{errors.error}</div>}
 
             <section className="grid gap-6 xl:grid-cols-3">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm h-fit">
@@ -49,6 +57,13 @@ export default function Show({ supplier, ledger, purchases, payments, returns: s
                     </dl>
                     <div className="mt-5 flex gap-2">
                         <Link href="/purchases/create" className="w-full text-center rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-900">New purchase</Link>
+                        <button
+                            type="button"
+                            onClick={handleDelete}
+                            className="rounded-xl bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors cursor-pointer"
+                        >
+                            Delete
+                        </button>
                     </div>
                 </div>
 
@@ -147,7 +162,7 @@ export default function Show({ supplier, ledger, purchases, payments, returns: s
                         <tbody className="divide-y divide-slate-100">
                             {payments.map((payment) => (
                                 <tr key={payment.id}>
-                                    <td className="px-4 py-3 text-slate-600">{payment.payment_date}</td>
+                                    <td className="px-4 py-3 text-slate-600">{formatDate(payment.payment_date)}</td>
                                     <td className="font-medium text-slate-800">{payment.number}</td>
                                     <td className="capitalize text-slate-600">{payment.method}</td>
                                     <td className="font-semibold text-slate-900">{money(payment.amount)}</td>
@@ -171,7 +186,7 @@ function LedgerCard({ title, rows }) {
                     <tbody className="divide-y divide-slate-100">
                         {rows.map((row, index) => (
                             <tr key={index} className="hover:bg-slate-50/50">
-                                <td className="px-4 py-3 text-slate-600">{row.date ?? 'Opening'}</td>
+                                <td className="px-4 py-3 text-slate-600">{row.date ? formatDate(row.date) : 'Opening'}</td>
                                 <td className="capitalize">{row.type}</td>
                                 <td>{row.number}</td>
                                 <td className="text-slate-950 font-semibold">{money(row.debit)}</td>

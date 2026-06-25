@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import React, { useEffect } from 'react';
+import PhoneInput from '@/Components/PhoneInput';
 
 export default function Register() {
     const form = useForm({
@@ -143,16 +144,16 @@ export default function Register() {
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
-                                <label className="block text-sm font-medium sm:col-span-1">
-                                    Phone Number
-                                    <input
-                                        type="text"
+                                <div className="sm:col-span-1 flex flex-col justify-end">
+                                    <PhoneInput
+                                        id="phone"
+                                        name="phone"
+                                        label="Phone Number"
                                         value={form.data.phone}
                                         onChange={(event) => form.setData('phone', event.target.value)}
-                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                                        error={form.errors.phone}
                                     />
-                                    {form.errors.phone && <p className="mt-1 text-xs text-red-600">{form.errors.phone}</p>}
-                                </label>
+                                </div>
 
                                 <label className="block text-sm font-medium sm:col-span-1">
                                     Currency

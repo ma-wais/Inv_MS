@@ -1,6 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import FloatingInput from '../../../Components/FloatingInput';
+import PhoneInput from '../../../Components/PhoneInput';
 import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 
@@ -78,8 +79,9 @@ export default function Index({ suppliers, filters = {} }) {
                                 onChange={(e) => form.setData('email', e.target.value)}
                                 error={form.errors.email}
                             />
-                            <FloatingInput
+                            <PhoneInput
                                 label="Phone Number"
+                                name="phone"
                                 value={form.data.phone}
                                 onChange={(e) => form.setData('phone', e.target.value)}
                                 error={form.errors.phone}

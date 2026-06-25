@@ -1,6 +1,7 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '../../Layouts/AuthenticatedLayout';
 import FloatingInput from '../../Components/FloatingInput';
+import PhoneInput from '../../Components/PhoneInput';
 
 export default function Shop({ shop }) {
     const { flash } = usePage().props;
@@ -51,8 +52,9 @@ export default function Shop({ shop }) {
                             onChange={(e) => form.setData('email', e.target.value)}
                             error={form.errors.email}
                         />
-                        <FloatingInput
+                        <PhoneInput
                             label="Phone Number"
+                            name="phone"
                             value={form.data.phone}
                             onChange={(e) => form.setData('phone', e.target.value)}
                             error={form.errors.phone}

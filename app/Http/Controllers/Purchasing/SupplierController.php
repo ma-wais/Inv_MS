@@ -88,6 +88,18 @@ class SupplierController extends Controller
         ]);
     }
 
+    public function destroy(Supplier $supplier, Audit $audit): RedirectResponse
+    {
+        if ($supplier->purchases()->exists() || $supplier->payments()->exists() || $supplier->returns()->exists()) {
+            return back()->withErrors(['error' => 'Cannot delete supplier because they have transaction history.']);
+        }
+
+        $audit->record('supplier.deleted', $supplier, $supplier->toArray(), null);
+        $supplier->delete();
+
+        return redirect()->route('suppliers.index')->with('status', 'Supplier deleted.');
+    }
+
     private function uniqueCode(string $name): string
     {
         $base = strtoupper(Str::slug($name, ''));

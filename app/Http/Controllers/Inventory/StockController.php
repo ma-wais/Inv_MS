@@ -63,9 +63,12 @@ class StockController extends Controller
             $movementsQuery->where('product_variant_id', $variantId);
         }
 
+        $balances = $balancesQuery->orderBy('quantity')->paginate(10, ['*'], 'balances_page')->withQueryString();
+        $movements = $movementsQuery->latest('occurred_at')->paginate(10, ['*'], 'movements_page')->withQueryString();
+
         return Inertia::render('Inventory/Stock/Index', [
-            'balances' => $balancesQuery->orderBy('quantity')->get(),
-            'movements' => $movementsQuery->latest('occurred_at')->limit(100)->get(),
+            'balances' => $balances,
+            'movements' => $movements,
             'filters' => [
                 'search' => $search ?? '',
                 'warehouse_id' => $warehouseId ?? '',

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Reporting;
 
 use App\Http\Controllers\Controller;
 use App\Services\Reporting\OperationalReportService;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,12 +26,19 @@ class OperationalReportController extends Controller
         ]);
     }
 
-    public function productProfit(): Response
+    public function productProfit(Request $request): Response
     {
-        $data = $this->reportService->productProfit();
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', now()->endOfMonth()->toDateString());
+
+        $data = $this->reportService->productProfit($startDate, $endDate);
 
         return Inertia::render('Reporting/ProductProfit', [
             'reportData' => $data,
+            'filters' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ]
         ]);
     }
 

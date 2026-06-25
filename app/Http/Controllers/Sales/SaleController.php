@@ -77,7 +77,18 @@ class SaleController extends Controller
 
     public function create(): Response
     {
+        $walkInCustomer = Customer::firstOrCreate(
+            ['code' => 'WALKIN'],
+            [
+                'name' => 'Walk-in Customer',
+                'is_active' => true,
+                'credit_limit' => 0,
+                'opening_balance' => 0,
+            ]
+        );
+
         return Inertia::render('Sales/POS/Create', [
+            'walk_in_customer_id' => $walkInCustomer->id,
             'customers' => Customer::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'phone']),
             'warehouses' => Warehouse::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'accounts' => Account::query()->where('is_active', true)->orderBy('code')->get(['id', 'code', 'name']),
