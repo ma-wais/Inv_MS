@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Supplier;
 use App\Services\Purchasing\SupplierLedgerService;
 use App\Support\Auditing\Audit;
+use App\Support\ContactFields;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -19,7 +20,7 @@ class SupplierController extends Controller
         $search = trim((string) $request->input('search'));
         $sort = $request->input('sort', 'name');
         $direction = $request->input('direction', 'asc');
-        if (!in_array($direction, ['asc', 'desc'])) {
+        if (! in_array($direction, ['asc', 'desc'])) {
             $direction = 'asc';
         }
 
@@ -28,10 +29,10 @@ class SupplierController extends Controller
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('contact_person', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('phone', 'like', "%{$search}%")
-                      ->orWhere('code', 'like', "%{$search}%");
+                        ->orWhere('contact_person', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
                 });
             });
 
@@ -42,22 +43,24 @@ class SupplierController extends Controller
         }
 
         return Inertia::render('Purchasing/Suppliers/Index', [
-            'suppliers' => $query->get(),
+            'suppliers' => $query->withLedgerTotals()->paginate(20)->withQueryString(),
             'filters' => [
                 'search' => $search,
                 'sort' => $sort,
                 'direction' => $direction,
-            ]
+            ],
         ]);
     }
 
     public function store(Request $request, Audit $audit): RedirectResponse
     {
+        ContactFields::normalize($request);
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'contact_person' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:50'],
+            'phone' => ContactFields::phoneRules(),
+            'cnic' => ContactFields::cnicRules(),
             'address' => ['nullable', 'string'],
             'tax_number' => ['nullable', 'string', 'max:100'],
             'opening_balance' => ['nullable', 'numeric'],
@@ -80,12 +83,45 @@ class SupplierController extends Controller
             'supplier' => $supplier->loadCount(['purchases', 'payments', 'returns']),
             'ledger' => $ledger->entries($supplier),
             'purchases' => $supplier->purchases()
+                ->withReturnTotals()
                 ->with(['warehouse:id,name'])
                 ->latest('purchase_date')
                 ->get(),
             'payments' => $supplier->payments()->latest('payment_date')->get(),
             'returns' => $supplier->returns()->latest('return_date')->get(),
         ]);
+    }
+
+    public function edit(Supplier $supplier): Response
+    {
+        return Inertia::render('Contacts/Edit', [
+            'kind' => 'suppliers', 'contact' => $supplier,
+            'has_history' => $supplier->purchases()->exists() || $supplier->payments()->exists() || $supplier->returns()->exists(),
+        ]);
+    }
+
+    public function update(Request $request, Supplier $supplier, Audit $audit): RedirectResponse
+    {
+        ContactFields::normalize($request);
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'contact_person' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ContactFields::phoneRules(), 'cnic' => ContactFields::cnicRules(),
+            'address' => ['nullable', 'string', 'max:2000'],
+            'tax_number' => ['nullable', 'string', 'max:100'],
+            'opening_balance' => ['nullable', 'numeric'],
+            'notes' => ['nullable', 'string', 'max:5000'], 'is_active' => ['required', 'boolean'],
+        ]);
+        if (isset($validated['opening_balance']) && (float) $validated['opening_balance'] !== (float) $supplier->opening_balance
+            && ($supplier->purchases()->exists() || $supplier->payments()->exists() || $supplier->returns()->exists())) {
+            return back()->withErrors(['opening_balance' => 'Opening balance cannot be changed after transactions have been recorded.']);
+        }
+        $old = $supplier->only(array_keys($validated));
+        $supplier->update($validated);
+        $audit->record('supplier.updated', $supplier, $old, $supplier->only(array_keys($validated)));
+
+        return redirect()->route('suppliers.show', $supplier)->with('status', 'Supplier updated.');
     }
 
     public function destroy(Supplier $supplier, Audit $audit): RedirectResponse

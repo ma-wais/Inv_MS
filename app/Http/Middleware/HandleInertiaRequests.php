@@ -2,9 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Tenant;
+use App\Support\ShopRole;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -42,18 +45,27 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
-            'auth' => [
-                'user' => $user,
-                'tenant' => $tenantContext->get(),
-                'role' => $user && $tenantContext->has()
-                    ? $user->roleFor($tenantContext->id())
-                    : null,
-                'tenants' => $user
-                    ? $user->tenants()
-                        ->where('tenants.status', 'active')
-                        ->get(['tenants.id', 'tenants.name'])
-                    : [],
-            ],
+            'auth' => function () use ($user, $tenantContext) {
+                // Route middleware selects the shop after shared props are registered.
+                $role = $user && $tenantContext->has() ? $user->roleFor($tenantContext->id()) : null;
+
+                return [
+                    'user' => $user ? [
+                        ...$user->only(['id', 'name', 'email', 'is_super_admin']),
+                        'image_url' => $user->image_path ? Storage::disk('public')->url($user->image_path) : null,
+                    ] : null,
+                    'tenant' => $tenantContext->get(),
+                    'role' => $role,
+                    'permissions' => $user?->is_super_admin || $role === ShopRole::ADMIN
+                        ? ShopRole::PERMISSIONS
+                        : ($role === ShopRole::WORKER ? ShopRole::WORKER_PERMISSIONS : []),
+                    'tenants' => $user
+                        ? ($user->is_super_admin
+                            ? Tenant::where('status', 'active')->orderBy('name')->get(['id', 'name'])
+                            : $user->tenants()->where('tenants.status', 'active')->get(['tenants.id', 'tenants.name']))
+                        : [],
+                ];
+            },
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
             ],

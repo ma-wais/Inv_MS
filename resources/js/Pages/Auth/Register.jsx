@@ -36,8 +36,11 @@ export default function Register() {
             <Head title="Register Shop" />
             <main className="grid min-h-screen bg-slate-950 lg:grid-cols-2">
                 <section className="hidden flex-col justify-between p-12 text-white lg:flex">
-                    <Link href="/" className="text-xl font-bold text-emerald-300">
-                        Ventory
+                    <Link href="/" className="flex items-center gap-2.5">
+                        <div className="h-8 w-8 rounded-lg bg-emerald-500 flex items-center justify-center text-foreground font-black text-xs">
+                            IMS
+                        </div>
+                        <span className="text-xl font-bold text-white tracking-tight">Inventory Management System</span>
                     </Link>
                     <div>
                         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">Onboarding Flow</p>
@@ -45,20 +48,20 @@ export default function Register() {
                             Start managing your store assets, sales, and accounts in seconds.
                         </h1>
                     </div>
-                    <p className="text-sm text-slate-500">English-first with PKR and Pakistan timezone defaults.</p>
+                    <p className="text-sm text-muted">English-first with PKR and Pakistan timezone defaults.</p>
                 </section>
 
-                <section className="flex items-center justify-center bg-white px-6 py-12 overflow-y-auto">
+                <section className="flex items-center justify-center bg-surface px-6 py-12 overflow-y-auto">
                     <form onSubmit={submit} className="w-full max-w-lg my-auto space-y-4">
                         <div>
-                            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-emerald-600">Register Shop</p>
+                            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-success-ink">Register Shop</p>
                             <h2 className="mt-2 text-3xl font-bold tracking-tight">Create your account</h2>
-                            <p className="text-sm text-slate-500">Enter your owner profile and shop configuration parameters.</p>
+                            <p className="text-sm text-muted">Enter your owner profile and shop configuration parameters.</p>
                         </div>
 
                         {/* Owner Details */}
-                        <div className="border-t border-slate-100 pt-4">
-                            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Owner Profile</h3>
+                        <div className="border-t border-line-soft pt-4">
+                            <h3 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3">Owner Profile</h3>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <label className="block text-sm font-medium">
@@ -68,9 +71,9 @@ export default function Register() {
                                         value={form.data.name}
                                         onChange={(event) => form.setData('name', event.target.value)}
                                         required
-                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                                        className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-emerald-500"
                                     />
-                                    {form.errors.name && <p className="mt-1 text-xs text-red-600">{form.errors.name}</p>}
+                                    {form.errors.name && <p className="mt-1 text-xs text-danger-ink">{form.errors.name}</p>}
                                 </label>
 
                                 <label className="block text-sm font-medium">
@@ -80,9 +83,9 @@ export default function Register() {
                                         value={form.data.email}
                                         onChange={(event) => form.setData('email', event.target.value)}
                                         required
-                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                                        className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-emerald-500"
                                     />
-                                    {form.errors.email && <p className="mt-1 text-xs text-red-600">{form.errors.email}</p>}
+                                    {form.errors.email && <p className="mt-1 text-xs text-danger-ink">{form.errors.email}</p>}
                                 </label>
                             </div>
 
@@ -94,9 +97,9 @@ export default function Register() {
                                         value={form.data.password}
                                         onChange={(event) => form.setData('password', event.target.value)}
                                         required
-                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                                        className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-emerald-500"
                                     />
-                                    {form.errors.password && <p className="mt-1 text-xs text-red-600">{form.errors.password}</p>}
+                                    {form.errors.password && <p className="mt-1 text-xs text-danger-ink">{form.errors.password}</p>}
                                 </label>
 
                                 <label className="block text-sm font-medium">
@@ -106,16 +109,16 @@ export default function Register() {
                                         value={form.data.password_confirmation}
                                         onChange={(event) => form.setData('password_confirmation', event.target.value)}
                                         required
-                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                                        className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-emerald-500"
                                     />
-                                    {form.errors.password_confirmation && <p className="mt-1 text-xs text-red-600">{form.errors.password_confirmation}</p>}
+                                    {form.errors.password_confirmation && <p className="mt-1 text-xs text-danger-ink">{form.errors.password_confirmation}</p>}
                                 </label>
                             </div>
                         </div>
 
                         {/* Shop Details */}
-                        <div className="border-t border-slate-100 pt-4">
-                            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Shop Configuration</h3>
+                        <div className="border-t border-line-soft pt-4">
+                            <h3 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3">Shop Configuration</h3>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <label className="block text-sm font-medium">
@@ -125,9 +128,9 @@ export default function Register() {
                                         value={form.data.shop_name}
                                         onChange={(event) => form.setData('shop_name', event.target.value)}
                                         required
-                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                                        className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-emerald-500"
                                     />
-                                    {form.errors.shop_name && <p className="mt-1 text-xs text-red-600">{form.errors.shop_name}</p>}
+                                    {form.errors.shop_name && <p className="mt-1 text-xs text-danger-ink">{form.errors.shop_name}</p>}
                                 </label>
 
                                 <label className="block text-sm font-medium">
@@ -137,9 +140,9 @@ export default function Register() {
                                         value={form.data.shop_slug}
                                         onChange={(event) => form.setData('shop_slug', event.target.value)}
                                         required
-                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-mono outline-none focus:border-emerald-500"
+                                        className="mt-1 w-full rounded-lg border border-line bg-surface-muted px-3 py-2 text-sm font-mono outline-none focus:border-emerald-500"
                                     />
-                                    {form.errors.shop_slug && <p className="mt-1 text-xs text-red-600">{form.errors.shop_slug}</p>}
+                                    {form.errors.shop_slug && <p className="mt-1 text-xs text-danger-ink">{form.errors.shop_slug}</p>}
                                 </label>
                             </div>
 
@@ -160,7 +163,7 @@ export default function Register() {
                                     <select
                                         value={form.data.currency}
                                         onChange={(event) => form.setData('currency', event.target.value)}
-                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                                        className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-emerald-500"
                                     >
                                         <option value="PKR">PKR (Rs.)</option>
                                         <option value="USD">USD ($)</option>
@@ -168,7 +171,7 @@ export default function Register() {
                                         <option value="GBP">GBP (£)</option>
                                         <option value="SAR">SAR (SR)</option>
                                     </select>
-                                    {form.errors.currency && <p className="mt-1 text-xs text-red-600">{form.errors.currency}</p>}
+                                    {form.errors.currency && <p className="mt-1 text-xs text-danger-ink">{form.errors.currency}</p>}
                                 </label>
 
                                 <label className="block text-sm font-medium sm:col-span-1">
@@ -176,7 +179,7 @@ export default function Register() {
                                     <select
                                         value={form.data.timezone}
                                         onChange={(event) => form.setData('timezone', event.target.value)}
-                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                                        className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-emerald-500"
                                     >
                                         <option value="Asia/Karachi">Asia/Karachi</option>
                                         <option value="UTC">UTC</option>
@@ -184,7 +187,7 @@ export default function Register() {
                                         <option value="Europe/London">Europe/London</option>
                                         <option value="Asia/Dubai">Asia/Dubai</option>
                                     </select>
-                                    {form.errors.timezone && <p className="mt-1 text-xs text-red-600">{form.errors.timezone}</p>}
+                                    {form.errors.timezone && <p className="mt-1 text-xs text-danger-ink">{form.errors.timezone}</p>}
                                 </label>
                             </div>
                         </div>
@@ -198,9 +201,9 @@ export default function Register() {
                                 {form.processing ? 'Registering Shop...' : 'Register and Setup Shop'}
                             </button>
 
-                            <p className="mt-4 text-center text-sm text-slate-500">
+                            <p className="mt-4 text-center text-sm text-muted">
                                 Already have an account?{' '}
-                                <Link href="/login" className="font-semibold text-slate-900 hover:text-emerald-600 underline">
+                                <Link href="/login" className="font-semibold text-foreground hover:text-success-ink underline">
                                     Sign in
                                 </Link>
                             </p>

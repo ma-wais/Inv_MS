@@ -33,7 +33,7 @@ export default function ProductProfit({ reportData, filters }) {
         { key: 'sku', label: 'SKU' },
         { key: 'product_name', label: 'Product Name' },
         { key: 'name', label: 'Variant Name' },
-        { key: 'quantity_sold', label: 'Qty Sold' },
+        { key: 'quantity_sold', label: 'Net Qty Sold' },
         { key: 'revenue', label: 'Revenue' },
         { key: 'cogs', label: 'COGS' },
         { key: 'profit', label: 'Profit' }
@@ -45,12 +45,13 @@ export default function ProductProfit({ reportData, filters }) {
         <AuthenticatedLayout title="Product Profitability">
             <Head title="Product Profitability" />
 
-            <div className="max-w-6xl mx-auto space-y-6">
+            <div className="w-full space-y-6">
+                {reportData.some(row => row.cost_history_missing) && <p role="alert" className="rounded-xl bg-warning-soft p-3 text-sm text-warning-ink">Some historical stock costs are unavailable. Profit for these rows is incomplete and needs review.</p>}
                 {/* Heading & Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 print:hidden">
                     <div>
-                        <h1 className="text-xl font-bold text-slate-800">Product Profitability Report</h1>
-                        <p className="text-sm text-slate-500">Gross revenue, cost of goods sold (COGS), and profit margins by product variant.</p>
+                        <h1 className="text-xl font-bold text-foreground">Product Profitability Report</h1>
+                        <p className="text-sm text-muted">Net revenue and profit after returns. Costs are fixed when each sale is posted; returns use their own return date.</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <ExportCSVButton 
@@ -61,7 +62,7 @@ export default function ProductProfit({ reportData, filters }) {
                         <button
                             type="button"
                             onClick={() => window.print()}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 focus:outline-none transition-colors"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-2 text-xs font-semibold text-foreground shadow-xs hover:bg-surface-muted focus:outline-none transition-colors"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -69,7 +70,7 @@ export default function ProductProfit({ reportData, filters }) {
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
                                 stroke="currentColor"
-                                className="h-4 w-4 text-slate-500"
+                                className="h-4 w-4 text-muted"
                             >
                                 <path
                                     strokeLinecap="round"
@@ -82,72 +83,72 @@ export default function ProductProfit({ reportData, filters }) {
                     </div>
                 </div>
 
-                <form onSubmit={handleFilterSubmit} className="flex flex-wrap items-end gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm print:hidden">
+                <form onSubmit={handleFilterSubmit} className="flex flex-wrap items-end gap-4 bg-surface p-5 rounded-2xl border border-line shadow-sm print:hidden">
                     <div className="flex-1 min-w-[200px]">
-                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date From</label>
+                        <label className="block text-xs font-semibold text-muted uppercase mb-1">Date From</label>
                         <input
                             type="date"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-slate-700"
+                            className="w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-foreground"
                         />
                     </div>
                     <div className="flex-1 min-w-[200px]">
-                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date To</label>
+                        <label className="block text-xs font-semibold text-muted uppercase mb-1">Date To</label>
                         <input
                             type="date"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-slate-700"
+                            className="w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-foreground"
                         />
                     </div>
                     <button
                         type="submit"
-                        className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-900 transition-colors cursor-pointer"
+                        className="rounded-xl bg-action px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-900 transition-colors cursor-pointer"
                     >
                         Apply Filter
                     </button>
                 </form>
 
                 {/* Print Header */}
-                <div className="hidden print:block border-b border-slate-300 pb-4">
-                    <h1 className="text-2xl font-bold text-slate-900">Product Profitability Report</h1>
-                    <p className="text-sm text-slate-600">Generated on: {new Date().toLocaleDateString()}</p>
+                <div className="hidden print:block border-b border-line pb-4">
+                    <h1 className="text-2xl font-bold text-foreground">Product Profitability Report</h1>
+                    <p className="text-sm text-muted">Generated on: {new Date().toLocaleDateString()}</p>
                 </div>
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Qty Sold</p>
-                        <p className="mt-2 text-xl font-bold text-slate-800">{totalQtySold.toLocaleString()}</p>
+                    <div className="rounded-2xl border border-line bg-surface p-4 shadow-xs">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-subtle">Net Qty Sold</p>
+                        <p className="mt-2 text-xl font-bold text-foreground">{totalQtySold.toLocaleString()}</p>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Revenue</p>
-                        <p className="mt-2 text-xl font-bold text-slate-800">PKR {money(totalRevenue)}</p>
+                    <div className="rounded-2xl border border-line bg-surface p-4 shadow-xs">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-subtle">Total Revenue</p>
+                        <p className="mt-2 text-xl font-bold text-foreground">PKR {money(totalRevenue)}</p>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total COGS</p>
-                        <p className="mt-2 text-xl font-bold text-slate-800">PKR {money(totalCogs)}</p>
+                    <div className="rounded-2xl border border-line bg-surface p-4 shadow-xs">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-subtle">Total COGS</p>
+                        <p className="mt-2 text-xl font-bold text-foreground">PKR {money(totalCogs)}</p>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs bg-emerald-50/30 border-emerald-100 md:col-span-2">
+                    <div className="rounded-2xl border border-line bg-surface p-4 shadow-xs bg-success-soft/30 border-success-ink/20 md:col-span-2">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Total Gross Profit</p>
-                                <p className="mt-2 text-xl font-bold text-emerald-800">PKR {money(totalProfit)}</p>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-success-ink">Total Gross Profit</p>
+                                <p className="mt-2 text-xl font-bold text-success-ink">PKR {money(totalProfit)}</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Avg. Margin</p>
-                                <p className="mt-2 text-xl font-bold text-emerald-800">{overallMargin.toFixed(2)}%</p>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-success-ink">Avg. Margin</p>
+                                <p className="mt-2 text-xl font-bold text-success-ink">{overallMargin.toFixed(2)}%</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Search Bar */}
-                <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 print:hidden">
+                <div className="flex items-center gap-4 bg-surface p-4 rounded-xl border border-line print:hidden">
                     <div className="relative flex-1">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                            <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-5 w-5 text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </span>
@@ -156,41 +157,41 @@ export default function ProductProfit({ reportData, filters }) {
                             placeholder="Search by SKU, Product or Variant Name..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 py-2 text-sm focus:border-emerald-500 focus:bg-white focus:outline-hidden"
+                            className="w-full rounded-lg border border-line bg-surface-muted pl-10 pr-4 py-2 text-sm focus:border-emerald-500 focus:bg-surface focus:outline-hidden"
                         />
                     </div>
                 </div>
 
                 {/* Data Table */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <thead className="bg-surface-muted text-xs uppercase text-muted">
                                 <tr>
                                     <th className="px-4 py-3">SKU</th>
                                     <th>Product</th>
                                     <th>Variant</th>
-                                    <th className="text-right">Qty Sold</th>
+                                    <th className="text-right">Net Qty Sold</th>
                                     <th className="text-right">Revenue</th>
                                     <th className="text-right">COGS (Cost)</th>
                                     <th className="text-right">Gross Profit</th>
                                     <th className="text-right px-4">Margin (%)</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-line-soft">
                                 {filteredData.length > 0 ? (
                                     filteredData.map((row, index) => {
                                         const margin = row.revenue > 0 ? (row.profit / row.revenue) * 100 : 0;
                                         return (
-                                            <tr key={index} className="hover:bg-slate-50/20">
-                                                <td className="px-4 py-2.5 font-medium text-slate-600">{row.sku}</td>
-                                                <td className="font-semibold text-slate-800">{row.product_name}</td>
-                                                <td className="text-slate-600">{row.name}</td>
-                                                <td className="text-right font-medium text-slate-800">{row.quantity_sold.toLocaleString()}</td>
-                                                <td className="text-right text-slate-600">{money(row.revenue)}</td>
-                                                <td className="text-right text-slate-600">{money(row.cogs)}</td>
-                                                <td className="text-right text-slate-900 font-semibold">{money(row.profit)}</td>
-                                                <td className="text-right font-bold text-emerald-700 px-4">
+                                            <tr key={index} className="hover:bg-surface-muted/20">
+                                                <td className="px-4 py-2.5 font-medium text-muted">{row.sku}</td>
+                                                <td className="font-semibold text-foreground">{row.product_name}</td>
+                                                <td className="text-muted">{row.name}</td>
+                                                <td className="text-right font-medium text-foreground">{row.quantity_sold.toLocaleString()}</td>
+                                                <td className="text-right text-muted">{money(row.revenue)}</td>
+                                                <td className="text-right text-muted">{money(row.cogs)}</td>
+                                                <td className="text-right text-foreground font-semibold">{money(row.profit)}</td>
+                                                <td className="text-right font-bold text-success-ink px-4">
                                                     {margin.toFixed(2)}%
                                                 </td>
                                             </tr>
@@ -198,18 +199,18 @@ export default function ProductProfit({ reportData, filters }) {
                                     })
                                 ) : (
                                     <tr>
-                                        <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
+                                        <td colSpan="8" className="px-4 py-8 text-center text-muted">
                                             No matching items found.
                                         </td>
                                     </tr>
                                 )}
-                                <tr className="bg-slate-50 font-bold border-t-2 border-slate-200">
-                                    <td className="px-4 py-3 text-slate-900" colSpan="3">Total</td>
-                                    <td className="text-right text-slate-900">{totalQtySold.toLocaleString()}</td>
-                                    <td className="text-right text-slate-900">{money(totalRevenue)}</td>
-                                    <td className="text-right text-slate-900">{money(totalCogs)}</td>
-                                    <td className="text-right text-emerald-800">{money(totalProfit)}</td>
-                                    <td className="text-right text-emerald-800 px-4">
+                                <tr className="bg-surface-muted font-bold border-t-2 border-line">
+                                    <td className="px-4 py-3 text-foreground" colSpan="3">Total</td>
+                                    <td className="text-right text-foreground">{totalQtySold.toLocaleString()}</td>
+                                    <td className="text-right text-foreground">{money(totalRevenue)}</td>
+                                    <td className="text-right text-foreground">{money(totalCogs)}</td>
+                                    <td className="text-right text-success-ink">{money(totalProfit)}</td>
+                                    <td className="text-right text-success-ink px-4">
                                         {overallMargin.toFixed(2)}%
                                     </td>
                                 </tr>

@@ -13,7 +13,7 @@ class PurchaseItem extends Model
     protected $fillable = [
         'tenant_id', 'purchase_id', 'product_variant_id', 'product_batch_id', 'quantity',
         'received_quantity', 'returned_quantity', 'unit_cost', 'discount_total', 'tax_total',
-        'line_total', 'batch_number', 'expires_at',
+        'line_total', 'batch_number', 'expires_at', 'net_total',
     ];
 
     protected function casts(): array
@@ -23,6 +23,7 @@ class PurchaseItem extends Model
             'received_quantity' => 'decimal:6',
             'returned_quantity' => 'decimal:6',
             'unit_cost' => 'decimal:4',
+            'net_total' => 'decimal:4',
             'discount_total' => 'decimal:4',
             'tax_total' => 'decimal:4',
             'line_total' => 'decimal:4',
@@ -38,5 +39,10 @@ class PurchaseItem extends Model
     public function batch()
     {
         return $this->belongsTo(ProductBatch::class, 'product_batch_id');
+    }
+
+    public function returnItems()
+    {
+        return $this->hasMany(PurchaseReturnItem::class);
     }
 }

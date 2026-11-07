@@ -14,12 +14,14 @@ class TenantSelectionController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = $request->user();
+
+        $query = $user->is_super_admin
+            ? Tenant::query()->where('status', 'active')->orderBy('name')
+            : $user->tenants()->where('tenants.status', 'active')->orderByPivot('is_default', 'desc');
+
         return Inertia::render('Tenants/Select', [
-            'tenants' => $request->user()
-                ->tenants()
-                ->where('tenants.status', 'active')
-                ->orderByPivot('is_default', 'desc')
-                ->get(['tenants.id', 'tenants.name', 'tenants.slug', 'tenants.currency']),
+            'tenants' => $query->get(['tenants.id', 'tenants.name', 'tenants.slug', 'tenants.currency']),
         ]);
     }
 
@@ -29,11 +31,19 @@ class TenantSelectionController extends Controller
         TenantContext $tenantContext,
         Audit $audit,
     ): RedirectResponse {
-        $authorizedTenant = $request->user()
-            ->tenants()
-            ->where('tenants.id', $tenant->id)
-            ->where('tenants.status', 'active')
-            ->firstOrFail();
+        $user = $request->user();
+
+        if ($user->is_super_admin) {
+            $authorizedTenant = Tenant::query()
+                ->where('id', $tenant->id)
+                ->where('status', 'active')
+                ->firstOrFail();
+        } else {
+            $authorizedTenant = $user->tenants()
+                ->where('tenants.id', $tenant->id)
+                ->where('tenants.status', 'active')
+                ->firstOrFail();
+        }
 
         $request->session()->put('tenant_id', $authorizedTenant->id);
         $tenantContext->set($authorizedTenant);

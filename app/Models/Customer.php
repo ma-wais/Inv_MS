@@ -12,7 +12,7 @@ class Customer extends Model
 
     protected $fillable = [
         'tenant_id', 'name', 'code', 'contact_person', 'email', 'phone', 'address',
-        'credit_limit', 'opening_balance', 'is_active', 'notes',
+        'credit_limit', 'opening_balance', 'is_active', 'notes', 'cnic',
     ];
 
     protected function casts(): array
@@ -43,6 +43,11 @@ class Customer extends Model
 
     public function ledgerBalance(): float
     {
+        if (array_key_exists('ledger_sales_total', $this->attributes)) {
+            return (float) $this->opening_balance + (float) $this->ledger_sales_total
+                - (float) $this->ledger_returns_total - (float) $this->ledger_payments_total;
+        }
+
         // For customers (Assets/Receivables):
         // Opening balance (debit) + Sales grand total (debit) - Payments (credit) - Returns (credit)
         return (float) $this->opening_balance
@@ -54,5 +59,12 @@ class Customer extends Model
     public function getLedgerBalanceAttribute(): float
     {
         return $this->ledgerBalance();
+    }
+
+    public function scopeWithLedgerTotals($query)
+    {
+        return $query->withSum(['sales as ledger_sales_total' => fn ($query) => $query->where('status', 'posted')], 'grand_total')
+            ->withSum(['returns as ledger_returns_total' => fn ($query) => $query->where('status', 'posted')], 'total')
+            ->withSum('payments as ledger_payments_total', 'amount');
     }
 }

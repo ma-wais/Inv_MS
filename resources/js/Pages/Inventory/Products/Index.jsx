@@ -102,77 +102,83 @@ export default function Index({ products, filters, categories = [], brands = [] 
                             name="search"
                             defaultValue={filters.search}
                             placeholder="Search name, SKU, or barcode"
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-emerald-500"
+                            className="w-full rounded-xl border border-line dark:border-slate-800 bg-surface dark:bg-slate-900 px-4 py-2.5 text-sm text-foreground dark:text-slate-100 outline-none focus:border-emerald-500 placeholder-slate-400 dark:placeholder-slate-500"
                         />
-                        <button className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer">Search</button>
+                        <button className="rounded-xl border border-line dark:border-slate-700 bg-surface dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-foreground dark:text-slate-200 hover:bg-surface-muted dark:hover:bg-slate-700 transition-colors cursor-pointer">Search</button>
                     </form>
-                    <div>
-                        <select
+                    <div className="min-w-[180px]">
+                        <SearchableSelect
+                            dense={true}
+                            empty="All Categories"
+                            options={categoryOptions}
                             value={categoryId}
-                            onChange={handleCategoryChange}
-                            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500 cursor-pointer font-medium text-slate-700"
-                        >
-                            <option value="">All Categories</option>
-                            {categories.map(c => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                        </select>
+                            onChange={(e) => {
+                                const newCat = e.target.value;
+                                setCategoryId(newCat);
+                                router.get('/products', {
+                                    search: filters.search,
+                                    category_id: newCat,
+                                    sort: sortField,
+                                    direction: sortDirection
+                                }, { preserveState: true });
+                            }}
+                        />
                     </div>
                 </div>
-                <Link href="/products/create" className="rounded-xl bg-slate-950 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">
+                <Link href="/products/create" className="rounded-xl bg-action dark:bg-emerald-600 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-emerald-700 dark:hover:bg-emerald-500 transition-colors shadow-xs">
                     Add product
                 </Link>
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="mt-6 overflow-hidden rounded-2xl border border-line dark:border-slate-800 bg-surface dark:bg-slate-900 shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                        <thead className="border-b border-line dark:border-slate-800 bg-surface-muted dark:bg-action text-xs uppercase tracking-wider text-muted dark:text-slate-400">
                             <tr>
-                                <th className="px-5 py-4 cursor-pointer hover:bg-slate-100/50 select-none" onClick={() => handleSort('name')}>
+                                <th className="px-5 py-4 cursor-pointer hover:bg-surface-hover/50 dark:hover:bg-slate-900/50 select-none" onClick={() => handleSort('name')}>
                                     Product {sortField === 'name' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
                                 </th>
-                                <th className="px-5 py-4 cursor-pointer hover:bg-slate-100/50 select-none" onClick={() => handleSort('category')}>
+                                <th className="px-5 py-4 cursor-pointer hover:bg-surface-hover/50 dark:hover:bg-slate-900/50 select-none" onClick={() => handleSort('category')}>
                                     Category / Brand {sortField === 'category' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
                                 </th>
                                 <th className="px-5 py-4 select-none">Variants</th>
-                                <th className="px-5 py-4 cursor-pointer hover:bg-slate-100/50 select-none" onClick={() => handleSort('stock')}>
+                                <th className="px-5 py-4 cursor-pointer hover:bg-surface-hover/50 dark:hover:bg-slate-900/50 select-none" onClick={() => handleSort('stock')}>
                                     Current stock {sortField === 'stock' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
                                 </th>
                                 <th className="px-5 py-4 select-none">Unit</th>
                                 <th className="text-right px-5 py-4 select-none">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-line-soft dark:divide-slate-800/60">
                             {products.data.map((product) => (
-                                <tr key={product.id} className="hover:bg-slate-50/20">
+                                <tr key={product.id} className="hover:bg-surface-muted/50 dark:hover:bg-slate-800/40 transition-colors">
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-3">
                                             {product.image_url ? (
                                                 <img
                                                     src={product.image_url}
                                                     alt={product.name}
-                                                    className="h-10 w-10 rounded-lg object-cover border border-slate-200"
+                                                    className="h-10 w-10 rounded-lg object-cover border border-line dark:border-slate-800"
                                                 />
                                             ) : (
-                                                <div className="h-10 w-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-xs font-bold font-mono">
+                                                <div className="h-10 w-10 rounded-lg bg-surface-hover dark:bg-slate-800 border border-line dark:border-slate-700 flex items-center justify-center text-subtle dark:text-slate-500 text-xs font-bold font-mono">
                                                     PKG
                                                 </div>
                                             )}
                                             <div>
-                                                <Link href={`/products/${product.id}`} className="font-semibold text-slate-800 hover:text-emerald-700 hover:underline">{product.name}</Link>
-                                                <p className="text-[10px] capitalize text-slate-400 mt-0.5">{product.product_type}</p>
+                                                <Link href={`/products/${product.id}`} className="font-semibold text-foreground dark:text-slate-100 hover:text-success-ink dark:hover:text-emerald-400 hover:underline">{product.name}</Link>
+                                                <p className="text-[10px] capitalize text-subtle dark:text-slate-500 mt-0.5">{product.product_type}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-5 py-4 text-slate-600">
+                                    <td className="px-5 py-4 text-muted dark:text-slate-300">
                                         {product.category?.name ?? 'Uncategorized'} / {product.brand?.name ?? 'No brand'}
                                     </td>
-                                    <td className="px-5 py-4 text-slate-600 font-medium">{product.variants_count}</td>
-                                    <td className="px-5 py-4 text-slate-800">
+                                    <td className="px-5 py-4 text-muted dark:text-slate-300 font-medium">{product.variants_count}</td>
+                                    <td className="px-5 py-4 text-foreground dark:text-slate-100">
                                         <div className="font-bold">{formatQuantity(product.stock_quantity)}</div>
                                         {product.variants && product.variants.length > 0 && (
-                                            <div className="mt-1 flex flex-col gap-0.5 text-[11px] text-slate-500 font-medium">
+                                            <div className="mt-1 flex flex-col gap-0.5 text-[11px] text-muted dark:text-slate-400 font-medium">
                                                 {product.variants.map((v) => (
                                                     <span key={v.id} className="whitespace-nowrap">
                                                         {v.name}: {formatQuantity(v.stock_quantity)}
@@ -181,26 +187,26 @@ export default function Index({ products, filters, categories = [], brands = [] 
                                             </div>
                                         )}
                                     </td>
-                                    <td className="px-5 py-4 text-slate-500">{product.base_unit.symbol}</td>
+                                    <td className="px-5 py-4 text-muted dark:text-slate-400">{product.base_unit.symbol}</td>
                                     <td className="text-right px-5 py-3">
                                         <div className="flex justify-end gap-1.5">
                                             <Link
                                                 href={`/products/${product.id}`}
-                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-line dark:border-slate-700 bg-surface dark:bg-slate-800 text-foreground dark:text-slate-200 hover:bg-surface-muted dark:hover:bg-slate-700 transition-colors"
                                             >
                                                 View Details
                                             </Link>
                                             <button
                                                 type="button"
                                                 onClick={() => handleEdit(product)}
-                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-line dark:border-slate-700 bg-surface dark:bg-slate-800 text-foreground dark:text-slate-200 hover:bg-surface-muted dark:hover:bg-slate-700 transition-colors cursor-pointer"
                                             >
                                                 Edit
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => handleDelete(product)}
-                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors cursor-pointer"
+                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-danger-ink/30 dark:border-red-900/60 bg-danger-soft dark:bg-red-950/40 text-danger-ink dark:text-red-400 hover:bg-danger-soft dark:hover:bg-red-900/60 transition-colors cursor-pointer"
                                             >
                                                 Delete
                                             </button>
@@ -209,7 +215,7 @@ export default function Index({ products, filters, categories = [], brands = [] 
                                 </tr>
                             ))}
                             {products.data.length === 0 && (
-                                <tr><td colSpan="6" className="px-5 py-12 text-center text-slate-400">No products found.</td></tr>
+                                <tr><td colSpan="6" className="px-5 py-12 text-center text-subtle dark:text-slate-500">No products found.</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -219,13 +225,13 @@ export default function Index({ products, filters, categories = [], brands = [] 
 
             {/* Edit details modal */}
             {editingProduct && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity">
-                    <div className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl animate-scale-up">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                            <h3 className="text-lg font-bold text-slate-800">Edit Product Details</h3>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-action/60 backdrop-blur-sm transition-opacity">
+                    <div className="relative w-full max-w-md rounded-2xl border border-line dark:border-slate-800 bg-surface dark:bg-slate-900 p-6 shadow-xl animate-scale-up">
+                        <div className="flex items-center justify-between border-b border-line-soft dark:border-slate-800 pb-3 mb-4">
+                            <h3 className="text-lg font-bold text-foreground dark:text-slate-100">Edit Product Details</h3>
                             <button
                                 onClick={() => setEditingProduct(null)}
-                                className="text-slate-400 hover:text-slate-600 transition-colors"
+                                className="text-subtle hover:text-muted dark:hover:text-slate-200 transition-colors"
                             >
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -276,12 +282,12 @@ export default function Index({ products, filters, categories = [], brands = [] 
                             />
 
                             <div className="space-y-1">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Product Image</label>
+                                <label className="block text-[10px] font-bold text-subtle uppercase tracking-widest">Product Image</label>
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={e => editForm.setData('image', e.target.files[0])}
-                                    className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-slate-200 file:text-xs file:font-semibold file:bg-slate-50 file:text-slate-700 hover:file:bg-slate-100 cursor-pointer"
+                                    className="w-full text-xs text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-line file:text-xs file:font-semibold file:bg-surface-muted file:text-foreground hover:file:bg-surface-hover cursor-pointer"
                                 />
                                 {editForm.errors.image && <p className="text-xs text-red-650 font-medium">{editForm.errors.image}</p>}
                             </div>
@@ -293,29 +299,29 @@ export default function Index({ products, filters, categories = [], brands = [] 
                                     value={editForm.data.description ?? ''}
                                     onChange={(e) => editForm.setData('description', e.target.value)}
                                     placeholder=" "
-                                    className="peer block w-full rounded-xl border border-slate-200 bg-white px-4 pb-2.5 pt-5 text-sm text-slate-800 outline-none transition-all focus:border-emerald-500 min-h-[80px]"
+                                    className="peer block w-full rounded-xl border border-line bg-surface px-4 pb-2.5 pt-5 text-sm text-foreground outline-none transition-all focus:border-emerald-500 min-h-[80px]"
                                 />
                                 <label
                                     htmlFor="edit_description"
-                                    className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-slate-400 duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
+                                    className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-subtle duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
                                 >
                                     Description
                                 </label>
-                                {editForm.errors.description && <p className="mt-1 text-xs text-red-600 font-normal">{editForm.errors.description}</p>}
+                                {editForm.errors.description && <p className="mt-1 text-xs text-danger-ink font-normal">{editForm.errors.description}</p>}
                             </div>
 
-                            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-4">
+                            <div className="flex justify-end gap-2 border-t border-line-soft pt-4 mt-4">
                                 <button
                                     type="button"
                                     onClick={() => setEditingProduct(null)}
-                                    className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                                    className="rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-surface-muted transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={editForm.processing}
-                                    className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-900 transition-colors disabled:opacity-60"
+                                    className="rounded-xl bg-action px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-900 transition-colors disabled:opacity-60"
                                 >
                                     Save Changes
                                 </button>

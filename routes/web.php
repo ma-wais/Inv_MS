@@ -27,6 +27,9 @@ use Inertia\Inertia;
 
 Route::get('/', function () {
     if (auth()->check()) {
+        if (auth()->user()->is_super_admin) {
+            return redirect()->route('super-admin.tenants.index');
+        }
         return redirect()->route('dashboard');
     }
     return redirect()->route('login');
@@ -72,9 +75,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', DashboardController::class)
             ->middleware('permission:dashboard.view')
             ->name('dashboard');
+        Route::get('/dashboard/metrics/{metric}', [DashboardController::class, 'metric'])
+            ->middleware('permission:dashboard.view')
+            ->name('dashboard.metrics');
 
         Route::get('/profile', [\App\Http\Controllers\Settings\ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [\App\Http\Controllers\Settings\ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [\App\Http\Controllers\Settings\ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
         Route::get('/settings/shop', [ShopSettingsController::class, 'edit'])
             ->middleware('permission:shops.manage')
@@ -138,6 +145,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
             Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
             Route::get('/suppliers/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
+            Route::get('/suppliers/{supplier}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
+            Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
             Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
             Route::post('/suppliers/{supplier}/payments', [SupplierPaymentController::class, 'store'])->name('supplier-payments.store');
 
@@ -157,11 +166,15 @@ Route::middleware('auth')->group(function () {
             Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
             Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
             Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+            Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+            Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
             Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
             Route::post('/customers/{customer}/payments', [CustomerPaymentController::class, 'store'])->name('customer-payments.store');
 
             Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
             Route::get('/pos', [SaleController::class, 'create'])->name('sales.create');
+            Route::get('/pos/catalog', [SaleController::class, 'catalog'])->name('sales.catalog');
+            Route::post('/pos/customers', [CustomerController::class, 'quickStore'])->name('sales.customers.store');
             Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
             Route::get('/sales/returns', [SaleReturnController::class, 'index'])->name('sale-returns.index');
             Route::get('/sales/returns/{return}', [SaleReturnController::class, 'show'])->name('sale-returns.show');

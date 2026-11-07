@@ -107,10 +107,10 @@ export default function Create({ categories, brands, units, warehouses }) {
             <Head title="Add product" />
 
             <form onSubmit={submit} className="max-w-6xl space-y-4">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-                    <div className="border-b border-slate-100 pb-3">
-                        <h2 className="text-base font-semibold text-slate-800">Add New Product Details & Variants</h2>
-                        <p className="text-xs text-slate-400">Specify general details and define one or more variants below.</p>
+                <div className="rounded-2xl border border-line bg-surface p-5 shadow-sm space-y-4">
+                    <div className="border-b border-line-soft pb-3">
+                        <h2 className="text-base font-semibold text-foreground">Add New Product Details & Variants</h2>
+                        <p className="text-xs text-subtle">Specify general details and define one or more variants below.</p>
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -144,7 +144,7 @@ export default function Create({ categories, brands, units, warehouses }) {
                             <button
                                 type="button"
                                 onClick={() => setShowAddCategory(true)}
-                                className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-xl transition-colors min-h-[50px] flex items-center justify-center font-bold text-lg cursor-pointer"
+                                className="p-3 bg-surface-hover hover:bg-surface-hover text-foreground hover:text-foreground rounded-xl transition-colors min-h-[50px] flex items-center justify-center font-bold text-lg cursor-pointer"
                                 title="Create new category inline"
                             >
                                 +
@@ -165,7 +165,7 @@ export default function Create({ categories, brands, units, warehouses }) {
                             <button
                                 type="button"
                                 onClick={() => setShowAddBrand(true)}
-                                className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-xl transition-colors min-h-[50px] flex items-center justify-center font-bold text-lg cursor-pointer"
+                                className="p-3 bg-surface-hover hover:bg-surface-hover text-foreground hover:text-foreground rounded-xl transition-colors min-h-[50px] flex items-center justify-center font-bold text-lg cursor-pointer"
                                 title="Create new brand inline"
                             >
                                 +
@@ -186,7 +186,7 @@ export default function Create({ categories, brands, units, warehouses }) {
                             <button
                                 type="button"
                                 onClick={() => setShowAddUnit(true)}
-                                className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-xl transition-colors min-h-[50px] flex items-center justify-center font-bold text-lg cursor-pointer"
+                                className="p-3 bg-surface-hover hover:bg-surface-hover text-foreground hover:text-foreground rounded-xl transition-colors min-h-[50px] flex items-center justify-center font-bold text-lg cursor-pointer"
                                 title="Create new unit inline"
                             >
                                 +
@@ -194,14 +194,14 @@ export default function Create({ categories, brands, units, warehouses }) {
                         </div>
 
                         <div className="space-y-1.5 flex flex-col justify-end">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Product Image</label>
+                            <label className="block text-[10px] font-bold text-subtle uppercase tracking-widest">Product Image</label>
                             <input
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => form.setData('image', e.target.files[0])}
-                                className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-slate-200 file:text-xs file:font-semibold file:bg-slate-50 file:text-slate-700 hover:file:bg-slate-100 cursor-pointer"
+                                className="w-full text-xs text-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-line file:text-xs file:font-semibold file:bg-surface-muted file:text-foreground hover:file:bg-surface-hover cursor-pointer"
                             />
-                            {form.errors.image && <p className="text-xs text-red-600 font-semibold">{form.errors.image}</p>}
+                            {form.errors.image && <p className="text-xs text-danger-ink font-semibold">{form.errors.image}</p>}
                         </div>
                     </div>
                     
@@ -212,11 +212,11 @@ export default function Create({ categories, brands, units, warehouses }) {
                             value={form.data.description}
                             onChange={(e) => form.setData('description', e.target.value)}
                             placeholder=" "
-                            className="peer block w-full rounded-xl border border-slate-200 bg-white px-4 pb-2 pt-5 text-sm text-slate-800 outline-none transition-all focus:border-emerald-500 min-h-16"
+                            className="peer block w-full rounded-xl border border-line bg-surface px-4 pb-2 pt-5 text-sm text-foreground outline-none transition-all focus:border-emerald-500 min-h-16"
                         />
                         <label
                             htmlFor="description"
-                            className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-slate-400 duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
+                            className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-subtle duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
                         >
                             Description
                         </label>
@@ -236,9 +236,9 @@ export default function Create({ categories, brands, units, warehouses }) {
                     </div>
 
                     {/* Dynamic Variants Table */}
-                    <div className="border-t border-slate-100 pt-4">
+                    <div className="border-t border-line-soft pt-4">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-sm font-bold text-slate-800">Product Variants</h3>
+                            <h3 className="text-sm font-bold text-foreground">Product Variants</h3>
                             <button
                                 type="button"
                                 onClick={addVariantRow}
@@ -248,9 +248,9 @@ export default function Create({ categories, brands, units, warehouses }) {
                             </button>
                         </div>
 
-                        <div className="overflow-x-auto border border-slate-200 rounded-xl bg-slate-50/30">
+                        <div className="overflow-x-auto border border-line rounded-xl bg-surface-muted/30">
                             <table className="w-full text-left text-xs min-w-[900px]">
-                                <thead className="bg-slate-50 border-b border-slate-200 uppercase tracking-wider text-slate-500 font-bold">
+                                <thead className="bg-surface-muted border-b border-line uppercase tracking-wider text-muted font-bold">
                                     <tr>
                                         <th className="px-3 py-2.5">Variant Name *</th>
                                         <th className="px-3 py-2.5">SKU (Optional)</th>
@@ -263,9 +263,9 @@ export default function Create({ categories, brands, units, warehouses }) {
                                         <th className="px-3 py-2.5 text-center">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200">
+                                <tbody className="divide-y divide-line">
                                     {form.data.variants.map((v, index) => (
-                                        <tr key={index} className="hover:bg-slate-50/50">
+                                        <tr key={index} className="hover:bg-surface-muted/50">
                                             <td className="p-2">
                                                 <input
                                                     type="text"
@@ -273,7 +273,7 @@ export default function Create({ categories, brands, units, warehouses }) {
                                                     placeholder="e.g. 5 Gallon"
                                                     value={v.name}
                                                     onChange={(e) => updateVariantRow(index, 'name', e.target.value)}
-                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500"
+                                                    className="w-full rounded-lg border border-line px-2 py-1 text-xs outline-none focus:border-emerald-500"
                                                 />
                                                 {form.errors[`variants.${index}.name`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.name`]}</p>}
                                             </td>
@@ -283,7 +283,7 @@ export default function Create({ categories, brands, units, warehouses }) {
                                                     placeholder="Auto-generated if blank"
                                                     value={v.sku}
                                                     onChange={(e) => updateVariantRow(index, 'sku', e.target.value)}
-                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500 font-mono"
+                                                    className="w-full rounded-lg border border-line px-2 py-1 text-xs outline-none focus:border-emerald-500 font-mono"
                                                 />
                                                 {form.errors[`variants.${index}.sku`] && <p className="text-[10px] text-red-655 font-medium mt-0.5">{form.errors[`variants.${index}.sku`]}</p>}
                                             </td>
@@ -292,7 +292,7 @@ export default function Create({ categories, brands, units, warehouses }) {
                                                     type="text"
                                                     value={v.barcode}
                                                     onChange={(e) => updateVariantRow(index, 'barcode', e.target.value)}
-                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500 font-mono"
+                                                    className="w-full rounded-lg border border-line px-2 py-1 text-xs outline-none focus:border-emerald-500 font-mono"
                                                 />
                                                 {form.errors[`variants.${index}.barcode`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.barcode`]}</p>}
                                             </td>
@@ -303,7 +303,7 @@ export default function Create({ categories, brands, units, warehouses }) {
                                                     required
                                                     value={v.purchase_price}
                                                     onChange={(e) => updateVariantRow(index, 'purchase_price', e.target.value)}
-                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500"
+                                                    className="w-full rounded-lg border border-line px-2 py-1 text-xs outline-none focus:border-emerald-500"
                                                 />
                                                 {form.errors[`variants.${index}.purchase_price`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.purchase_price`]}</p>}
                                             </td>
@@ -314,7 +314,7 @@ export default function Create({ categories, brands, units, warehouses }) {
                                                     required
                                                     value={v.sale_price}
                                                     onChange={(e) => updateVariantRow(index, 'sale_price', e.target.value)}
-                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500"
+                                                    className="w-full rounded-lg border border-line px-2 py-1 text-xs outline-none focus:border-emerald-500"
                                                 />
                                                 {form.errors[`variants.${index}.sale_price`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.sale_price`]}</p>}
                                             </td>
@@ -324,7 +324,7 @@ export default function Create({ categories, brands, units, warehouses }) {
                                                     step="any"
                                                     value={v.reorder_level}
                                                     onChange={(e) => updateVariantRow(index, 'reorder_level', e.target.value)}
-                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500"
+                                                    className="w-full rounded-lg border border-line px-2 py-1 text-xs outline-none focus:border-emerald-500"
                                                 />
                                                 {form.errors[`variants.${index}.reorder_level`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.reorder_level`]}</p>}
                                             </td>
@@ -334,28 +334,19 @@ export default function Create({ categories, brands, units, warehouses }) {
                                                     step="any"
                                                     value={v.opening_stock}
                                                     onChange={(e) => updateVariantRow(index, 'opening_stock', e.target.value)}
-                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500"
+                                                    className="w-full rounded-lg border border-line px-2 py-1 text-xs outline-none focus:border-emerald-500"
                                                 />
                                                 {form.errors[`variants.${index}.opening_stock`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.opening_stock`]}</p>}
                                             </td>
                                             <td className="p-2">
-                                                <select
-                                                    disabled={Number(v.opening_stock ?? 0) <= 0}
-                                                    value={v.warehouse_id}
-                                                    onChange={(e) => updateVariantRow(index, 'warehouse_id', e.target.value)}
-                                                    className="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-emerald-500 bg-white"
-                                                >
-                                                    {warehouses.map(wh => (
-                                                        <option key={wh.id} value={wh.id}>{wh.name}</option>
-                                                    ))}
-                                                </select>
+                                                <SearchableSelect dense label="Opening stock warehouse" disabled={Number(v.opening_stock ?? 0) <= 0} value={v.warehouse_id} onChange={e => updateVariantRow(index, 'warehouse_id', e.target.value)} options={warehouses.map(wh => [wh.id, wh.name])} required={Number(v.opening_stock ?? 0) > 0} />
                                                 {form.errors[`variants.${index}.warehouse_id`] && <p className="text-[10px] text-red-650 font-medium mt-0.5">{form.errors[`variants.${index}.warehouse_id`]}</p>}
                                             </td>
                                             <td className="p-2 text-center">
                                                 <button
                                                     type="button"
                                                     onClick={() => removeVariantRow(index)}
-                                                    className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors cursor-pointer"
+                                                    className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-danger-soft text-danger-ink hover:bg-danger-soft hover:text-danger-ink transition-colors cursor-pointer"
                                                     title="Remove variant"
                                                 >
                                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -369,7 +360,7 @@ export default function Create({ categories, brands, units, warehouses }) {
                             </table>
                         </div>
                         {form.errors.variants && (
-                            <p className="text-xs text-red-600 font-semibold mt-2">{form.errors.variants}</p>
+                            <p className="text-xs text-danger-ink font-semibold mt-2">{form.errors.variants}</p>
                         )}
                     </div>
                 </div>
@@ -378,13 +369,13 @@ export default function Create({ categories, brands, units, warehouses }) {
                     <button
                         type="submit"
                         disabled={form.processing}
-                        className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors cursor-pointer"
+                        className="rounded-xl bg-action px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors cursor-pointer"
                     >
                         {form.processing ? 'Creating...' : 'Create product'}
                     </button>
                     <Link
                         href="/products"
-                        className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold hover:bg-slate-50 transition-colors"
+                        className="rounded-xl border border-line bg-surface px-6 py-3 text-sm font-semibold hover:bg-surface-muted transition-colors"
                     >
                         Cancel
                     </Link>
@@ -394,10 +385,10 @@ export default function Create({ categories, brands, units, warehouses }) {
             {/* Inline Category Modal */}
             {showAddCategory && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                            <h3 className="font-semibold text-lg text-slate-800">Add Category</h3>
-                            <button type="button" onClick={() => setShowAddCategory(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                    <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl">
+                        <div className="flex justify-between items-center border-b border-line-soft pb-3 mb-4">
+                            <h3 className="font-semibold text-lg text-foreground">Add Category</h3>
+                            <button type="button" onClick={() => setShowAddCategory(false)} className="text-subtle hover:text-muted font-bold">✕</button>
                         </div>
                         <InlineCategoryForm 
                             categories={categories} 
@@ -414,10 +405,10 @@ export default function Create({ categories, brands, units, warehouses }) {
             {/* Inline Brand Modal */}
             {showAddBrand && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                            <h3 className="font-semibold text-lg text-slate-800">Add Brand</h3>
-                            <button type="button" onClick={() => setShowAddBrand(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                    <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl">
+                        <div className="flex justify-between items-center border-b border-line-soft pb-3 mb-4">
+                            <h3 className="font-semibold text-lg text-foreground">Add Brand</h3>
+                            <button type="button" onClick={() => setShowAddBrand(false)} className="text-subtle hover:text-muted font-bold">✕</button>
                         </div>
                         <InlineBrandForm 
                             onSuccess={(name) => {
@@ -433,10 +424,10 @@ export default function Create({ categories, brands, units, warehouses }) {
             {/* Inline Unit Modal */}
             {showAddUnit && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                            <h3 className="font-semibold text-lg text-slate-800">Add Unit</h3>
-                            <button type="button" onClick={() => setShowAddUnit(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                    <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl">
+                        <div className="flex justify-between items-center border-b border-line-soft pb-3 mb-4">
+                            <h3 className="font-semibold text-lg text-foreground">Add Unit</h3>
+                            <button type="button" onClick={() => setShowAddUnit(false)} className="text-subtle hover:text-muted font-bold">✕</button>
                         </div>
                         <InlineUnitForm 
                             onSuccess={(name) => {
@@ -459,9 +450,9 @@ function Checkbox({ label, checked, onChange }) {
                 type="checkbox"
                 checked={checked}
                 onChange={(e) => onChange(e.target.checked)}
-                className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                className="rounded border-line text-success-ink focus:ring-emerald-500 h-4 w-4"
             />
-            <span className="text-sm font-medium text-slate-700">{label}</span>
+            <span className="text-sm font-medium text-foreground">{label}</span>
         </label>
     );
 }
@@ -496,8 +487,8 @@ function InlineCategoryForm({ categories, onSuccess, onClose }) {
             />
             {form.errors.name && <p className="text-xs text-red-650 font-normal">{form.errors.name}</p>}
             <div className="flex gap-2 justify-end mt-4">
-                <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
-                <button type="submit" disabled={form.processing} className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Add Category</button>
+                <button type="button" onClick={onClose} className="rounded-xl border border-line px-4 py-2.5 text-xs font-semibold text-muted hover:bg-surface-muted transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" disabled={form.processing} className="rounded-xl bg-action px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Add Category</button>
             </div>
         </form>
     );
@@ -526,8 +517,8 @@ function InlineBrandForm({ onSuccess, onClose }) {
             />
             {form.errors.name && <p className="text-xs text-red-655 font-normal">{form.errors.name}</p>}
             <div className="flex gap-2 justify-end mt-4">
-                <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
-                <button type="submit" disabled={form.processing} className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Add Brand</button>
+                <button type="button" onClick={onClose} className="rounded-xl border border-line px-4 py-2.5 text-xs font-semibold text-muted hover:bg-surface-muted transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" disabled={form.processing} className="rounded-xl bg-action px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Add Brand</button>
             </div>
         </form>
     );
@@ -560,20 +551,20 @@ function InlineUnitForm({ onSuccess, onClose }) {
                 onChange={(e) => form.setData('symbol', e.target.value)}
                 required
             />
-            <label className="flex items-center gap-2 text-sm text-slate-600 select-none cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-muted select-none cursor-pointer">
                 <input
                     type="checkbox"
                     checked={form.data.allows_decimal}
                     onChange={(e) => form.setData('allows_decimal', e.target.checked)}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                    className="rounded border-line text-success-ink focus:ring-emerald-500 h-4 w-4"
                 />
                 <span>Allow decimal quantities</span>
             </label>
             {form.errors.name && <p className="text-xs text-red-650 font-normal">{form.errors.name}</p>}
             {form.errors.symbol && <p className="text-xs text-red-650 font-normal">{form.errors.symbol}</p>}
             <div className="flex gap-2 justify-end mt-4">
-                <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
-                <button type="submit" disabled={form.processing} className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Add Unit</button>
+                <button type="button" onClick={onClose} className="rounded-xl border border-line px-4 py-2.5 text-xs font-semibold text-muted hover:bg-surface-muted transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" disabled={form.processing} className="rounded-xl bg-action px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Add Unit</button>
             </div>
         </form>
     );

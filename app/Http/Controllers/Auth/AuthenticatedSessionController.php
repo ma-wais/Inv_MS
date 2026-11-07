@@ -33,6 +33,21 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
         $audit->record('auth.login');
 
+        $user = $request->user();
+
+        if ($user->is_super_admin) {
+            return redirect()->intended(route('super-admin.tenants.index'));
+        }
+
+        $tenant = $user->tenants()
+            ->where('tenants.status', 'active')
+            ->orderByPivot('is_default', 'desc')
+            ->first();
+
+        if ($tenant) {
+            $request->session()->put('tenant_id', $tenant->id);
+        }
+
         return redirect()->intended(route('dashboard'));
     }
 

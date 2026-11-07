@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 
 class SaleReturnController extends Controller
 {
@@ -27,7 +28,7 @@ class SaleReturnController extends Controller
     public function create(Sale $sale): Response
     {
         return Inertia::render('Sales/Returns/Create', [
-            'sale' => $sale->load(['customer', 'warehouse', 'items.variant.product.baseUnit']),
+            'sale' => $sale->load(['items' => fn ($query) => $query->withSum('returnItems as credited_total', 'line_total'), 'customer', 'warehouse', 'items.variant.product.baseUnit']),
         ]);
     }
 
@@ -37,11 +38,15 @@ class SaleReturnController extends Controller
             'return_date' => ['required', 'date'],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.sale_item_id' => ['required', 'integer'],
+            'items.*.sale_item_id' => ['required', 'integer', 'distinct'],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
         ]);
 
-        $return = $saleService->createReturn($sale, $validated, $validated['items']);
+        try {
+            $return = $saleService->createReturn($sale, $validated, $validated['items']);
+        } catch (InvalidArgumentException $exception) {
+            return back()->withErrors(['items' => $exception->getMessage()]);
+        }
         $audit->record('sale.return.created', $return, null, $return->toArray());
 
         return redirect()->route('sales.show', $sale)->with('status', 'Sale return posted.');

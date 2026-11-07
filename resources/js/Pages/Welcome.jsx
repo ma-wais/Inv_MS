@@ -4,11 +4,11 @@ export default function Welcome({ appName }) {
     return (
         <>
             <Head title="Inventory management" />
-            <main className="min-h-screen bg-slate-950 text-white">
+            <main className="min-h-screen bg-action text-white">
                 <section className="mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-6 py-16">
                 <div className="mb-16 flex items-center justify-between">
                     <p className="text-sm font-semibold uppercase tracking-[0.35em] text-emerald-300">{appName}</p>
-                    <Link href="/login" className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-white/10">
+                    <Link href="/login" className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-surface/10">
                         Sign in
                     </Link>
                 </div>
@@ -36,7 +36,7 @@ export default function Welcome({ appName }) {
 
 function Feature({ title, text }) {
     return (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20">
+        <div className="rounded-2xl border border-white/10 bg-surface/5 p-5 shadow-2xl shadow-black/20">
             <h2 className="font-semibold text-emerald-200">{title}</h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">{text}</p>
         </div>

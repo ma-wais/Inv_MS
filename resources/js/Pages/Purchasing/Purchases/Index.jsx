@@ -46,93 +46,93 @@ export default function Index({ purchases, filters = {} }) {
     return (
         <AuthenticatedLayout title="Purchases">
             <Head title="Purchases" />
-            {flash.status && <div className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{flash.status}</div>}
+            {flash.status && <div className="mb-5 rounded-xl bg-success-soft px-4 py-3 text-sm font-medium text-success-ink">{flash.status}</div>}
 
-            <div className="mb-6 flex flex-wrap gap-4 items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+            <div className="mb-6 flex flex-wrap gap-4 items-center justify-between bg-surface-muted p-4 rounded-2xl border border-line/60">
                 <form onSubmit={handleFilter} className="flex flex-wrap items-center gap-3 flex-1">
                     <input
                         type="text"
                         placeholder="Search invoice number, supplier..."
                         value={searchVal}
                         onChange={(e) => setSearchVal(e.target.value)}
-                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500 w-full sm:w-60"
+                        className="rounded-xl border border-line bg-surface px-3 py-2 text-xs outline-none focus:border-emerald-500 w-full sm:w-60"
                     />
                     <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-slate-400 font-semibold uppercase">From</span>
+                        <span className="text-[10px] text-subtle font-semibold uppercase">From</span>
                         <input
                             type="date"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                            className="rounded-xl border border-line bg-surface px-3 py-2 text-xs outline-none focus:border-emerald-500"
                         />
                     </div>
                     <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-slate-400 font-semibold uppercase">To</span>
+                        <span className="text-[10px] text-subtle font-semibold uppercase">To</span>
                         <input
                             type="date"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                            className="rounded-xl border border-line bg-surface px-3 py-2 text-xs outline-none focus:border-emerald-500"
                         />
                     </div>
-                    <button type="submit" className="rounded-xl bg-slate-950 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition-colors cursor-pointer">Filter</button>
+                    <button type="submit" className="rounded-xl bg-action px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition-colors cursor-pointer">Filter</button>
                     {(searchVal || startDate || endDate) && (
-                        <button type="button" onClick={clearFilters} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">Clear</button>
+                        <button type="button" onClick={clearFilters} className="rounded-xl border border-line bg-surface px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted transition-colors cursor-pointer">Clear</button>
                     )}
                 </form>
-                <Link href="/purchases/create" className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">New purchase</Link>
+                <Link href="/purchases/create" className="rounded-xl bg-action px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">New purchase</Link>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                        <thead className="bg-surface-muted text-xs uppercase text-muted">
                             <tr>
-                                <th className="px-5 py-4 cursor-pointer hover:bg-slate-100/50 select-none" onClick={() => handleSort('number')}>
+                                <th className="px-5 py-4 cursor-pointer hover:bg-surface-hover/50 select-none" onClick={() => handleSort('number')}>
                                     Number {sortField === 'number' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
                                 </th>
-                                <th className="cursor-pointer hover:bg-slate-100/50 select-none" onClick={() => handleSort('supplier')}>
+                                <th className="cursor-pointer hover:bg-surface-hover/50 select-none" onClick={() => handleSort('supplier')}>
                                     Supplier {sortField === 'supplier' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
                                 </th>
                                 <th>Items</th>
-                                <th className="cursor-pointer hover:bg-slate-100/50 select-none" onClick={() => handleSort('warehouse')}>
+                                <th className="cursor-pointer hover:bg-surface-hover/50 select-none" onClick={() => handleSort('warehouse')}>
                                     Warehouse {sortField === 'warehouse' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
                                 </th>
                                 <th>Status</th>
-                                <th className="cursor-pointer hover:bg-slate-100/50 select-none" onClick={() => handleSort('total')}>
+                                <th className="cursor-pointer hover:bg-surface-hover/50 select-none" onClick={() => handleSort('total')}>
                                     Total {sortField === 'total' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
                                 </th>
-                                <th className="cursor-pointer hover:bg-slate-100/50 select-none" onClick={() => handleSort('outstanding')}>
+                                <th className="cursor-pointer hover:bg-surface-hover/50 select-none" onClick={() => handleSort('outstanding')}>
                                     Outstanding {sortField === 'outstanding' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
                                 </th>
                                 <th className="text-right px-5">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-line-soft">
                             {purchases.data.map((purchase) => (
-                                <tr key={purchase.id} className="hover:bg-slate-50/20">
-                                    <td className="px-5 py-4"><Link href={`/purchases/${purchase.id}`} className="font-semibold text-emerald-700 hover:underline">{purchase.number}</Link></td>
-                                    <td className="text-slate-700 font-medium">{purchase.supplier.name}</td>
+                                <tr key={purchase.id} className="hover:bg-surface-muted/20">
+                                    <td className="px-5 py-4"><Link href={`/purchases/${purchase.id}`} className="font-semibold text-success-ink hover:underline">{purchase.number}</Link></td>
+                                    <td className="text-foreground font-medium">{purchase.supplier.name}</td>
                                     <td className="py-4">
-                                        <div className="max-w-[220px] truncate text-xs text-slate-500 font-medium" title={purchase.items?.map(i => `${i.variant?.name} (x${qty(i.quantity)})`).join(', ')}>
+                                        <div className="max-w-[220px] truncate text-xs text-muted font-medium" title={purchase.items?.map(i => `${i.variant?.name} (x${qty(i.quantity)})`).join(', ')}>
                                             {purchase.items?.map(i => `${i.variant?.name} (x${qty(i.quantity)})`).join(', ')}
                                         </div>
                                     </td>
-                                    <td className="text-slate-500 text-xs">{purchase.warehouse.name}</td>
+                                    <td className="text-muted text-xs">{purchase.warehouse.name}</td>
                                     <td className="capitalize">
                                         <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-bold ${
-                                            purchase.status === 'received' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'
+                                            purchase.status === 'received' ? 'bg-success-soft text-success-ink' : 'bg-surface-hover text-foreground'
                                         }`}>
                                             {purchase.status}
                                         </span>
                                     </td>
-                                    <td className="text-slate-800 font-medium">{money(purchase.grand_total)}</td>
-                                    <td className="font-bold text-slate-800">{money(purchase.grand_total - purchase.paid_total)}</td>
+                                    <td className="text-foreground font-medium">{money(purchase.grand_total)}</td>
+                                    <td className="font-bold text-foreground">{money(purchase.outstanding)}</td>
                                     <td className="text-right px-5 py-2">
                                         <div className="flex justify-end gap-1.5">
                                             <Link
                                                 href={`/purchases/${purchase.id}`}
-                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-line bg-surface text-foreground hover:bg-surface-muted transition-colors"
                                             >
                                                 View
                                             </Link>
@@ -140,7 +140,7 @@ export default function Index({ purchases, filters = {} }) {
                                                 href={`/purchases/${purchase.id}?print=true`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-line bg-surface text-foreground hover:bg-surface-muted transition-colors"
                                             >
                                                 Print
                                             </a>
@@ -150,7 +150,7 @@ export default function Index({ purchases, filters = {} }) {
                             ))}
                             {purchases.data.length === 0 && (
                                 <tr>
-                                    <td colSpan="8" className="px-5 py-8 text-center text-slate-400">
+                                    <td colSpan="8" className="px-5 py-8 text-center text-subtle">
                                         No purchases found.
                                     </td>
                                 </tr>

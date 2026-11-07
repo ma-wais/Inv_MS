@@ -10,7 +10,6 @@ use App\Models\PurchaseReturn;
 use App\Models\Sale;
 use App\Models\SaleReturn;
 use App\Models\SupplierPayment;
-use InvalidArgumentException;
 
 class AutomaticPostingService
 {
@@ -25,7 +24,9 @@ class AutomaticPostingService
 
         $amount = (float) $purchase->grand_total;
 
-        if ($amount <= 0) return;
+        if ($amount <= 0) {
+            return;
+        }
 
         $this->journalEntries->create([
             'entry_date' => $purchase->purchase_date->toDateString(),
@@ -57,7 +58,9 @@ class AutomaticPostingService
 
         $amount = (float) $payment->amount;
 
-        if ($amount <= 0) return;
+        if ($amount <= 0) {
+            return;
+        }
 
         $this->journalEntries->create([
             'entry_date' => $payment->payment_date->toDateString(),
@@ -89,7 +92,9 @@ class AutomaticPostingService
 
         $amount = (float) $return->total;
 
-        if ($amount <= 0) return;
+        if ($amount <= 0) {
+            return;
+        }
 
         $this->journalEntries->create([
             'entry_date' => $return->return_date->toDateString(),
@@ -121,39 +126,41 @@ class AutomaticPostingService
 
         $saleAmount = (float) $sale->grand_total;
 
-        if ($saleAmount <= 0) return;
-
-        // Post revenue entry
-        $this->journalEntries->create([
-            'entry_date' => $sale->sale_date->toDateString(),
-            'reference_type' => Sale::class,
-            'reference_id' => $sale->id,
-            'reference_number' => $sale->number,
-            'description' => "System posting for sale revenue: {$sale->number}",
-            'is_system' => true,
-        ], [
-            [
-                'account_id' => $arAcc->id,
-                'debit' => $saleAmount,
-                'credit' => 0.0,
-                'description' => 'Accounts Receivable debit',
-            ],
-            [
-                'account_id' => $revenueAcc->id,
-                'debit' => 0.0,
-                'credit' => $saleAmount,
-                'description' => 'Sales Revenue credit',
-            ],
-        ]);
+        if ($saleAmount > 0) {
+            // Post revenue entry
+            $this->journalEntries->create([
+                'entry_date' => $sale->sale_date->toDateString(),
+                'reference_type' => Sale::class,
+                'reference_id' => $sale->id,
+                'reference_number' => $sale->number,
+                'description' => "System posting for sale revenue: {$sale->number}",
+                'is_system' => true,
+            ], [
+                [
+                    'account_id' => $arAcc->id,
+                    'debit' => $saleAmount,
+                    'credit' => 0.0,
+                    'description' => 'Accounts Receivable debit',
+                ],
+                [
+                    'account_id' => $revenueAcc->id,
+                    'debit' => 0.0,
+                    'credit' => $saleAmount,
+                    'description' => 'Sales Revenue credit',
+                ],
+            ]);
+        }
 
         // Post COGS entry
         $sale->load('items.variant');
         $cogsAmount = 0.0;
         foreach ($sale->items as $item) {
-            $cogsAmount += (float) $item->quantity * (float) $item->variant->purchase_price;
+            $cogsAmount += (float) $item->quantity * (float) $item->unit_cost;
         }
 
-        if ($cogsAmount <= 0) return;
+        if ($cogsAmount <= 0) {
+            return;
+        }
 
         $cogsAcc = $this->getAccount('5100');
         $inventoryAcc = $this->getAccount('1400');
@@ -188,7 +195,9 @@ class AutomaticPostingService
 
         $amount = (float) $payment->amount;
 
-        if ($amount <= 0) return;
+        if ($amount <= 0) {
+            return;
+        }
 
         $this->journalEntries->create([
             'entry_date' => $payment->payment_date->toDateString(),
@@ -220,38 +229,40 @@ class AutomaticPostingService
 
         $returnAmount = (float) $return->total;
 
-        if ($returnAmount <= 0) return;
-
-        $this->journalEntries->create([
-            'entry_date' => $return->return_date->toDateString(),
-            'reference_type' => SaleReturn::class,
-            'reference_id' => $return->id,
-            'reference_number' => $return->number,
-            'description' => "System posting for sale return: {$return->number}",
-            'is_system' => true,
-        ], [
-            [
-                'account_id' => $revenueAcc->id,
-                'debit' => $returnAmount,
-                'credit' => 0.0,
-                'description' => 'Sales Revenue debit (reversal)',
-            ],
-            [
-                'account_id' => $arAcc->id,
-                'debit' => 0.0,
-                'credit' => $returnAmount,
-                'description' => 'Accounts Receivable credit (reversal)',
-            ],
-        ]);
+        if ($returnAmount > 0) {
+            $this->journalEntries->create([
+                'entry_date' => $return->return_date->toDateString(),
+                'reference_type' => SaleReturn::class,
+                'reference_id' => $return->id,
+                'reference_number' => $return->number,
+                'description' => "System posting for sale return: {$return->number}",
+                'is_system' => true,
+            ], [
+                [
+                    'account_id' => $revenueAcc->id,
+                    'debit' => $returnAmount,
+                    'credit' => 0.0,
+                    'description' => 'Sales Revenue debit (reversal)',
+                ],
+                [
+                    'account_id' => $arAcc->id,
+                    'debit' => 0.0,
+                    'credit' => $returnAmount,
+                    'description' => 'Accounts Receivable credit (reversal)',
+                ],
+            ]);
+        }
 
         // Post COGS reversal entry
         $return->load('items.variant');
         $cogsReversal = 0.0;
         foreach ($return->items as $item) {
-            $cogsReversal += (float) $item->quantity * (float) $item->variant->purchase_price;
+            $cogsReversal += (float) $item->quantity * (float) $item->unit_cost;
         }
 
-        if ($cogsReversal <= 0) return;
+        if ($cogsReversal <= 0) {
+            return;
+        }
 
         $inventoryAcc = $this->getAccount('1400');
         $cogsAcc = $this->getAccount('5100');
@@ -286,7 +297,9 @@ class AutomaticPostingService
 
         $amount = $quantity * $unitCost;
 
-        if ($amount <= 0) return;
+        if ($amount <= 0) {
+            return;
+        }
 
         $this->journalEntries->create([
             'entry_date' => now()->toDateString(),

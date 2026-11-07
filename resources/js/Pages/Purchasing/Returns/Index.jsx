@@ -12,13 +12,13 @@ export default function Index({ returns }) {
             <Head title="Purchase Returns" />
 
             <div className="mb-4 flex justify-between items-center">
-                <h1 className="text-xl font-bold text-slate-800">Purchase Returns History</h1>
+                <h1 className="text-xl font-bold text-foreground">Purchase Returns History</h1>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                        <thead className="bg-surface-muted text-xs uppercase text-muted">
                             <tr>
                                 <th className="px-5 py-4">Return Number</th>
                                 <th>Purchase Invoice</th>
@@ -29,23 +29,23 @@ export default function Index({ returns }) {
                                 <th className="text-right px-5">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-line-soft">
                             {returns.data.map((ret) => (
-                                <tr key={ret.id} className="hover:bg-slate-50/20">
-                                    <td className="px-5 py-4 font-semibold text-slate-800">{ret.number}</td>
+                                <tr key={ret.id} className="hover:bg-surface-muted/20">
+                                    <td className="px-5 py-4 font-semibold text-foreground">{ret.number}</td>
                                     <td>
-                                        <Link href={`/purchases/${ret.purchase_id}`} className="font-semibold text-emerald-700 hover:underline">
+                                        <Link href={`/purchases/${ret.purchase_id}`} className="font-semibold text-success-ink hover:underline">
                                             {ret.purchase?.number ?? '—'}
                                         </Link>
                                     </td>
-                                    <td className="text-slate-700 font-medium">{ret.supplier?.name ?? '—'}</td>
-                                    <td className="text-slate-500 text-xs">{ret.warehouse?.name ?? '—'}</td>
-                                    <td className="text-slate-600">{formatDate(ret.return_date)}</td>
-                                    <td className="text-slate-800 font-medium">PKR {money(ret.total)}</td>
+                                    <td className="text-foreground font-medium">{ret.supplier?.name ?? '—'}</td>
+                                    <td className="text-muted text-xs">{ret.warehouse?.name ?? '—'}</td>
+                                    <td className="text-muted">{formatDate(ret.return_date)}</td>
+                                    <td className="text-foreground font-medium">PKR {money(ret.total)}</td>
                                     <td className="text-right px-5 py-2">
                                         <Link
                                             href={`/purchases/returns/${ret.id}`}
-                                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-line bg-surface text-foreground hover:bg-surface-muted transition-colors"
                                         >
                                             View Invoice
                                         </Link>
@@ -54,7 +54,7 @@ export default function Index({ returns }) {
                             ))}
                             {returns.data.length === 0 && (
                                 <tr>
-                                    <td colSpan="7" className="px-5 py-8 text-center text-slate-400">
+                                    <td colSpan="7" className="px-5 py-8 text-center text-subtle">
                                         No purchase returns found.
                                     </td>
                                 </tr>

@@ -4,16 +4,19 @@ namespace App\Http\Controllers\Purchasing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Models\ProductBatch;
 use App\Models\ProductVariant;
 use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use App\Models\Warehouse;
 use App\Services\Purchasing\PurchaseService;
-use App\Support\Auditing\Audit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 
 class PurchaseController extends Controller
 {
@@ -24,7 +27,7 @@ class PurchaseController extends Controller
         $endDate = $request->input('end_date');
         $sort = $request->input('sort', 'id');
         $direction = $request->input('direction', 'desc');
-        if (!in_array($direction, ['asc', 'desc'])) {
+        if (! in_array($direction, ['asc', 'desc'])) {
             $direction = 'desc';
         }
 
@@ -33,8 +36,8 @@ class PurchaseController extends Controller
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('number', 'like', "%{$search}%")
-                      ->orWhereHas('supplier', fn ($q) => $q->where('name', 'like', "%{$search}%"))
-                      ->orWhereHas('warehouse', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+                        ->orWhereHas('supplier', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('warehouse', fn ($q) => $q->where('name', 'like', "%{$search}%"));
                 });
             })
             ->when($startDate, function ($query, $startDate) {
@@ -58,26 +61,26 @@ class PurchaseController extends Controller
         } elseif ($sort === 'total') {
             $query->orderBy('grand_total', $direction);
         } elseif ($sort === 'outstanding') {
-            $query->orderByRaw('(grand_total - paid_total) ' . $direction);
+            $query->orderByRaw('(grand_total - paid_total - (SELECT COALESCE(SUM(total), 0) FROM purchase_returns WHERE purchase_id = purchases.id AND tenant_id = purchases.tenant_id AND status = ?)) '.$direction, ['posted']);
         } else {
             $query->orderBy('purchases.id', $direction);
         }
 
         return Inertia::render('Purchasing/Purchases/Index', [
-            'purchases' => $query->paginate(20)->withQueryString(),
+            'purchases' => $query->withReturnTotals()->paginate(20)->withQueryString(),
             'filters' => [
                 'search' => $search,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'sort' => $sort,
                 'direction' => $direction,
-            ]
+            ],
         ]);
     }
 
     private function incrementStringNumber(?string $string): string
     {
-        if (!$string) {
+        if (! $string) {
             return '1';
         }
 
@@ -87,7 +90,8 @@ class PurchaseController extends Controller
             $len = strlen($numberStr);
             $nextNumber = intval($numberStr) + 1;
             $nextNumberStr = str_pad((string) $nextNumber, $len, '0', STR_PAD_LEFT);
-            return $prefix . $nextNumberStr;
+
+            return $prefix.$nextNumberStr;
         }
 
         if (preg_match('/(\d+)/', $string, $matches)) {
@@ -95,10 +99,11 @@ class PurchaseController extends Controller
             $len = strlen($numberStr);
             $nextNumber = intval($numberStr) + 1;
             $nextNumberStr = str_pad((string) $nextNumber, $len, '0', STR_PAD_LEFT);
+
             return str_replace($numberStr, $nextNumberStr, $string);
         }
 
-        return $string . '1';
+        return $string.'1';
     }
 
     public function create(): Response
@@ -111,14 +116,14 @@ class PurchaseController extends Controller
 
         $nextInvoiceNum = $this->incrementStringNumber($lastInvoiceNum);
 
-        $lastBatchNum = \App\Models\ProductBatch::query()
+        $lastBatchNum = ProductBatch::query()
             ->whereNotNull('batch_number')
             ->where('batch_number', '!=', '')
             ->latest('id')
             ->value('batch_number');
 
-        if (!$lastBatchNum) {
-            $lastBatchNum = \App\Models\PurchaseItem::query()
+        if (! $lastBatchNum) {
+            $lastBatchNum = PurchaseItem::query()
                 ->whereNotNull('batch_number')
                 ->where('batch_number', '!=', '')
                 ->latest('id')
@@ -161,10 +166,17 @@ class PurchaseController extends Controller
             'items.*.expires_at' => ['nullable', 'date'],
         ]);
 
-        $purchase = $purchaseService->create($validated, $validated['items']);
+        try {
+            $purchase = DB::transaction(function () use ($purchaseService, $validated) {
+                $purchase = $purchaseService->create($validated, $validated['items']);
+                if ($validated['status'] === Purchase::STATUS_RECEIVED) {
+                    $purchaseService->receive($purchase);
+                }
 
-        if ($validated['status'] === Purchase::STATUS_RECEIVED) {
-            $purchaseService->receive($purchase);
+                return $purchase;
+            });
+        } catch (InvalidArgumentException $exception) {
+            return back()->withErrors(['items' => $exception->getMessage()]);
         }
 
         return redirect()->route('purchases.show', $purchase)->with('status', 'Purchase saved.');
@@ -173,14 +185,18 @@ class PurchaseController extends Controller
     public function show(Purchase $purchase): Response
     {
         return Inertia::render('Purchasing/Purchases/Show', [
-            'purchase' => $purchase->load(['supplier', 'warehouse', 'items.variant.product.baseUnit', 'items.batch']),
+            'purchase' => $purchase->loadSum(['returns as returns_total' => fn ($query) => $query->where('status', 'posted')], 'total')->load(['supplier', 'warehouse', 'items.variant.product.baseUnit', 'items.batch']),
             'accounts' => Account::query()->where('is_active', true)->orderBy('code')->get(['id', 'code', 'name']),
         ]);
     }
 
     public function receive(Purchase $purchase, PurchaseService $purchaseService): RedirectResponse
     {
-        $purchaseService->receive($purchase);
+        try {
+            $purchaseService->receive($purchase);
+        } catch (InvalidArgumentException $exception) {
+            return back()->withErrors(['error' => $exception->getMessage()]);
+        }
 
         return back()->with('status', 'Purchase received and posted to stock.');
     }

@@ -3,7 +3,7 @@ import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import React from 'react';
 import FloatingInput from '../../../Components/FloatingInput';
 import SearchableSelect from '../../../Components/SearchableSelect';
-import { formatDate } from '../../../Components/utils';
+import { formatDate, today } from '../../../Components/utils';
 
 export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
     const { flash } = usePage().props;
@@ -11,7 +11,7 @@ export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
     const form = useForm({
         expense_account_id: expenseAccounts[0]?.id ?? '',
         payment_account_id: paymentAccounts[0]?.id ?? '',
-        expense_date: new Date().toISOString().slice(0, 10),
+        expense_date: today(),
         amount: '',
         reference: '',
         notes: '',
@@ -39,12 +39,12 @@ export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
         <AuthenticatedLayout title="Expenses">
             <Head title="Expenses" />
 
-            {flash.status && <div className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{flash.status}</div>}
+            {flash.status && <div className="mb-5 rounded-xl bg-success-soft px-4 py-3 text-sm font-medium text-success-ink">{flash.status}</div>}
 
             <section className="grid gap-6 xl:grid-cols-3">
                 {/* Record Expense Form */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm h-fit">
-                    <h2 className="font-semibold text-slate-800 mb-4">Record Expense</h2>
+                <div className="rounded-2xl border border-line bg-surface p-5 shadow-sm h-fit">
+                    <h2 className="font-semibold text-foreground mb-4">Record Expense</h2>
                     <form onSubmit={submit} className="space-y-4">
                         <FloatingInput
                             id="expense_date"
@@ -110,20 +110,20 @@ export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
                                 value={form.data.notes ?? ''}
                                 onChange={(e) => form.setData('notes', e.target.value)}
                                 placeholder=" "
-                                className="peer block w-full rounded-xl border border-slate-200 bg-white px-4 pb-2.5 pt-5 text-sm text-slate-800 outline-none transition-all focus:border-emerald-500 min-h-[80px]"
+                                className="peer block w-full rounded-xl border border-line bg-surface px-4 pb-2.5 pt-5 text-sm text-foreground outline-none transition-all focus:border-emerald-500 min-h-[80px]"
                             />
                             <label
                                 htmlFor="notes"
-                                className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-slate-400 duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
+                                className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-subtle duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
                             >
                                 Notes
                             </label>
-                            {form.errors.notes && <p className="mt-1 text-xs text-red-600 font-normal">{form.errors.notes}</p>}
+                            {form.errors.notes && <p className="mt-1 text-xs text-danger-ink font-normal">{form.errors.notes}</p>}
                         </div>
 
                         <button
                             disabled={form.processing}
-                            className="w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-60"
+                            className="w-full rounded-xl bg-action px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-60"
                         >
                             Save Expense
                         </button>
@@ -131,11 +131,11 @@ export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
                 </div>
 
                 {/* Expense List */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:col-span-2">
-                    <h2 className="font-semibold text-slate-800">Expense Log</h2>
-                    <div className="mt-4 overflow-hidden rounded-xl border border-slate-100">
+                <div className="rounded-2xl border border-line bg-surface p-5 shadow-sm xl:col-span-2">
+                    <h2 className="font-semibold text-foreground">Expense Log</h2>
+                    <div className="mt-4 overflow-hidden rounded-xl border border-line-soft">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <thead className="bg-surface-muted text-xs uppercase text-muted">
                                 <tr>
                                     <th className="px-4 py-3">Expense Date</th>
                                     <th>Number</th>
@@ -145,17 +145,17 @@ export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
                                     <th>Notes</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-line-soft">
                                 {expenses.map((expense) => (
-                                    <tr key={expense.id} className="hover:bg-slate-50/50">
-                                        <td className="px-4 py-3 text-slate-600">{formatDate(expense.expense_date)}</td>
-                                        <td className="font-semibold text-slate-800">{expense.number}</td>
+                                    <tr key={expense.id} className="hover:bg-surface-muted/50">
+                                        <td className="px-4 py-3 text-muted">{formatDate(expense.expense_date)}</td>
+                                        <td className="font-semibold text-foreground">{expense.number}</td>
                                         <td>{expense.expense_account.name}</td>
                                         <td>{expense.payment_account.name}</td>
-                                        <td className="text-right font-bold text-slate-900">
+                                        <td className="text-right font-bold text-foreground">
                                             PKR {Number(expense.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                         </td>
-                                        <td className="text-xs text-slate-500 max-w-48 truncate" title={expense.notes}>
+                                        <td className="text-xs text-muted max-w-48 truncate" title={expense.notes}>
                                             {expense.notes}
                                         </td>
                                     </tr>
@@ -164,7 +164,7 @@ export default function Index({ expenses, expenseAccounts, paymentAccounts }) {
                         </table>
                     </div>
                     {expenses.length === 0 && (
-                        <p className="mt-6 text-center text-slate-400 text-sm">No expenses recorded yet.</p>
+                        <p className="mt-6 text-center text-subtle text-sm">No expenses recorded yet.</p>
                     )}
                 </div>
             </section>

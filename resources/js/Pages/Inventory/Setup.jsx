@@ -46,13 +46,13 @@ export default function Setup({ categories, brands, units }) {
             <Head title="Inventory setup" />
 
             {flash.status && (
-                <div className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                <div className="mb-5 rounded-xl bg-success-soft px-4 py-3 text-sm font-medium text-success-ink">
                     {flash.status}
                 </div>
             )}
 
             {errors.error && (
-                <div className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                <div className="mb-5 rounded-xl bg-danger-soft px-4 py-3 text-sm font-medium text-danger-ink">
                     {errors.error}
                 </div>
             )}
@@ -89,10 +89,10 @@ export default function Setup({ categories, brands, units }) {
             {/* Edit Category Modal */}
             {editingCategory && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                            <h3 className="font-semibold text-lg text-slate-800">Edit Category</h3>
-                            <button type="button" onClick={() => setEditingCategory(null)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                    <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl">
+                        <div className="flex justify-between items-center border-b border-line-soft pb-3 mb-4">
+                            <h3 className="font-semibold text-lg text-foreground">Edit Category</h3>
+                            <button type="button" onClick={() => setEditingCategory(null)} className="text-subtle hover:text-muted font-bold">✕</button>
                         </div>
                         <EditCategoryForm category={editingCategory} categories={categories} onClose={() => setEditingCategory(null)} />
                     </div>
@@ -102,10 +102,10 @@ export default function Setup({ categories, brands, units }) {
             {/* Edit Brand Modal */}
             {editingBrand && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                            <h3 className="font-semibold text-lg text-slate-800">Edit Brand</h3>
-                            <button type="button" onClick={() => setEditingBrand(null)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                    <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl">
+                        <div className="flex justify-between items-center border-b border-line-soft pb-3 mb-4">
+                            <h3 className="font-semibold text-lg text-foreground">Edit Brand</h3>
+                            <button type="button" onClick={() => setEditingBrand(null)} className="text-subtle hover:text-muted font-bold">✕</button>
                         </div>
                         <EditBrandForm brand={editingBrand} onClose={() => setEditingBrand(null)} />
                     </div>
@@ -115,10 +115,10 @@ export default function Setup({ categories, brands, units }) {
             {/* Edit Unit Modal */}
             {editingUnit && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                            <h3 className="font-semibold text-lg text-slate-800">Edit Unit</h3>
-                            <button type="button" onClick={() => setEditingUnit(null)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                    <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl">
+                        <div className="flex justify-between items-center border-b border-line-soft pb-3 mb-4">
+                            <h3 className="font-semibold text-lg text-foreground">Edit Unit</h3>
+                            <button type="button" onClick={() => setEditingUnit(null)} className="text-subtle hover:text-muted font-bold">✕</button>
                         </div>
                         <EditUnitForm unit={editingUnit} onClose={() => setEditingUnit(null)} />
                     </div>
@@ -130,16 +130,16 @@ export default function Setup({ categories, brands, units }) {
 
 function SetupCard({ title, description, searchQuery, onSearchChange, children }) {
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="font-semibold text-slate-800 text-base">{title}</h2>
-            <p className="mt-1 text-xs text-slate-500 mb-3">{description}</p>
+        <div className="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+            <h2 className="font-semibold text-foreground text-base">{title}</h2>
+            <p className="mt-1 text-xs text-muted mb-3">{description}</p>
             <div className="mb-4">
                 <input
                     type="text"
                     placeholder={`Search ${title.toLowerCase()}...`}
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-xs outline-none focus:border-emerald-500"
                 />
             </div>
             {children}
@@ -188,12 +188,12 @@ function UnitForm() {
                 onChange={(e) => form.setData('symbol', e.target.value)}
                 required
             />
-            <label className="flex items-center gap-2 text-sm text-slate-600 select-none cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-muted select-none cursor-pointer">
                 <input
                     type="checkbox"
                     checked={form.data.allows_decimal}
                     onChange={(e) => form.setData('allows_decimal', e.target.checked)}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                    className="rounded border-line text-success-ink focus:ring-emerald-500 h-4 w-4"
                 />
                 <span>Allow decimal quantities</span>
             </label>
@@ -224,17 +224,17 @@ function ItemList({ items, onEdit, onDelete }) {
     return (
         <div className="mt-4 max-h-60 space-y-2 overflow-auto pr-1">
             {items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 border border-slate-100 hover:bg-slate-100/50 transition-colors">
+                <div key={item.id} className="flex items-center justify-between rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold text-foreground border border-line-soft hover:bg-surface-hover/50 transition-colors">
                     <div className="flex flex-col">
                         <span>{item.name}</span>
-                        {item.meta && <span className="text-[10px] text-slate-400 font-mono mt-0.5">{item.meta}</span>}
+                        {item.meta && <span className="text-[10px] text-subtle font-mono mt-0.5">{item.meta}</span>}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 ml-2">
                         {onEdit && (
                             <button
                                 type="button"
                                 onClick={() => onEdit(item)}
-                                className="p-1 text-slate-400 hover:text-emerald-600 rounded transition-colors hover:bg-slate-200/50 cursor-pointer"
+                                className="p-1 text-subtle hover:text-success-ink rounded transition-colors hover:bg-surface-hover/50 cursor-pointer"
                                 title="Edit"
                             >
                                 <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -246,7 +246,7 @@ function ItemList({ items, onEdit, onDelete }) {
                             <button
                                 type="button"
                                 onClick={() => onDelete(item)}
-                                className="p-1 text-slate-400 hover:text-red-600 rounded transition-colors hover:bg-slate-200/50 cursor-pointer"
+                                className="p-1 text-subtle hover:text-danger-ink rounded transition-colors hover:bg-surface-hover/50 cursor-pointer"
                                 title="Delete"
                             >
                                 <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -257,7 +257,7 @@ function ItemList({ items, onEdit, onDelete }) {
                     </div>
                 </div>
             ))}
-            {items.length === 0 && <p className="text-xs text-slate-400 italic text-center py-4">Nothing added yet.</p>}
+            {items.length === 0 && <p className="text-xs text-subtle italic text-center py-4">Nothing added yet.</p>}
         </div>
     );
 }
@@ -294,8 +294,8 @@ function EditCategoryForm({ category, categories, onClose }) {
             />
             <FormError errors={form.errors} />
             <div className="flex gap-2 justify-end mt-4">
-                <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
-                <button type="submit" disabled={form.processing} className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Save Changes</button>
+                <button type="button" onClick={onClose} className="rounded-xl border border-line px-4 py-2.5 text-xs font-semibold text-muted hover:bg-surface-muted transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" disabled={form.processing} className="rounded-xl bg-action px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Save Changes</button>
             </div>
         </form>
     );
@@ -324,8 +324,8 @@ function EditBrandForm({ brand, onClose }) {
             />
             <FormError errors={form.errors} />
             <div className="flex gap-2 justify-end mt-4">
-                <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
-                <button type="submit" disabled={form.processing} className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Save Changes</button>
+                <button type="button" onClick={onClose} className="rounded-xl border border-line px-4 py-2.5 text-xs font-semibold text-muted hover:bg-surface-muted transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" disabled={form.processing} className="rounded-xl bg-action px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Save Changes</button>
             </div>
         </form>
     );
@@ -360,19 +360,19 @@ function EditUnitForm({ unit, onClose }) {
                 onChange={(e) => form.setData('symbol', e.target.value)}
                 required
             />
-            <label className="flex items-center gap-2 text-sm text-slate-600 select-none cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-muted select-none cursor-pointer">
                 <input
                     type="checkbox"
                     checked={form.data.allows_decimal}
                     onChange={(e) => form.setData('allows_decimal', e.target.checked)}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                    className="rounded border-line text-success-ink focus:ring-emerald-500 h-4 w-4"
                 />
                 <span>Allow decimal quantities</span>
             </label>
             <FormError errors={form.errors} />
             <div className="flex gap-2 justify-end mt-4">
-                <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
-                <button type="submit" disabled={form.processing} className="rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Save Changes</button>
+                <button type="button" onClick={onClose} className="rounded-xl border border-line px-4 py-2.5 text-xs font-semibold text-muted hover:bg-surface-muted transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" disabled={form.processing} className="rounded-xl bg-action px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">Save Changes</button>
             </div>
         </form>
     );
@@ -380,14 +380,14 @@ function EditUnitForm({ unit, onClose }) {
 
 function FormError({ errors }) {
     const first = Object.values(errors)[0];
-    return first ? <p className="text-xs text-red-600 font-normal">{first}</p> : null;
+    return first ? <p className="text-xs text-danger-ink font-normal">{first}</p> : null;
 }
 
 function SubmitButton({ form, children }) {
     return (
         <button
             disabled={form.processing}
-            className="w-full rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors cursor-pointer"
+            className="w-full rounded-xl bg-action px-4 py-2.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors cursor-pointer"
         >
             {children}
         </button>

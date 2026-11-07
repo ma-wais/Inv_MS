@@ -64,7 +64,7 @@ export default function ExportCSVButton({ data, columns, filename = 'report.csv'
         <button
             type="button"
             onClick={exportToCSV}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 focus:outline-none print:hidden transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-2 text-xs font-semibold text-foreground shadow-xs hover:bg-surface-muted focus:outline-none print:hidden transition-colors"
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -72,7 +72,7 @@ export default function ExportCSVButton({ data, columns, filename = 'report.csv'
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
                 stroke="currentColor"
-                className="h-4 w-4 text-slate-500"
+                className="h-4 w-4 text-muted"
             >
                 <path
                     strokeLinecap="round"

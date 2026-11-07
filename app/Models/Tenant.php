@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Tenant extends Model
 {
@@ -19,7 +20,15 @@ class Tenant extends Model
         'timezone',
         'status',
         'meta',
+        'logo_path',
     ];
+
+    protected $appends = ['logo_url'];
+
+    public function getLogoUrlAttribute(): ?string
+    {
+        return $this->logo_path ? Storage::disk('public')->url($this->logo_path) : null;
+    }
 
     protected function casts(): array
     {
@@ -53,5 +62,10 @@ class Tenant extends Model
     public function warehouses()
     {
         return $this->hasMany(Warehouse::class);
+    }
+
+    public function units()
+    {
+        return $this->hasMany(Unit::class);
     }
 }

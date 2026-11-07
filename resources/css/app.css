@@ -9,7 +9,95 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+    --color-surface: var(--surface);
+    --color-surface-muted: var(--surface-muted);
+    --color-surface-hover: var(--surface-hover);
+    --color-foreground: var(--foreground);
+    --color-muted: var(--muted);
+    --color-subtle: var(--subtle);
+    --color-line: var(--line);
+    --color-line-soft: var(--line-soft);
+    --color-success-soft: var(--success-soft);
+    --color-success-ink: var(--success-ink);
+    --color-warning-soft: var(--warning-soft);
+    --color-warning-ink: var(--warning-ink);
+    --color-danger-soft: var(--danger-soft);
+    --color-danger-ink: var(--danger-ink);
+    --color-info-soft: var(--info-soft);
+    --color-info-ink: var(--info-ink);
+    --color-action: var(--action);
+}
+
+@layer base {
+    :root {
+        color-scheme: light;
+        --surface: #ffffff;
+        --surface-muted: #f8fafc;
+        --surface-hover: #eef2f7;
+        --foreground: #17243b;
+        --muted: #52627a;
+        --subtle: #64748b;
+        --line: #dce3ed;
+        --line-soft: #e9eef5;
+        --success-soft: #ecfdf5;
+        --success-ink: #047857;
+        --warning-soft: #fffbeb;
+        --warning-ink: #92400e;
+        --danger-soft: #fff1f2;
+        --danger-ink: #be123c;
+        --info-soft: #eff6ff;
+        --info-ink: #1d4ed8;
+        --action: #0f172a;
+    }
+    :root.dark {
+        color-scheme: dark;
+        --surface: #111c30;
+        --surface-muted: #0b1424;
+        --surface-hover: #20304a;
+        --foreground: #eaf0fa;
+        --muted: #a5b4ca;
+        --subtle: #8d9fb9;
+        --line: #33445f;
+        --line-soft: #25354e;
+        --success-soft: #0b352e;
+        --success-ink: #6ee7b7;
+        --warning-soft: #392b19;
+        --warning-ink: #fcd34d;
+        --danger-soft: #3e2031;
+        --danger-ink: #fda4af;
+        --info-soft: #172f52;
+        --info-ink: #93c5fd;
+        --action: #047857;
+    }
+    body { background: var(--surface-muted); color: var(--foreground); }
+    input, select, textarea { accent-color: #059669; }
+    input::placeholder, textarea::placeholder { color: var(--subtle); }
+    :focus-visible { outline: 2px solid #10b981; outline-offset: 3px; }
+}
+
 @media print {
+    :root, :root.dark {
+        color-scheme: light;
+        --surface: #ffffff;
+        --surface-muted: #ffffff;
+        --surface-hover: #ffffff;
+        --foreground: #17243b;
+        --muted: #52627a;
+        --subtle: #64748b;
+        --line: #dce3ed;
+        --line-soft: #e9eef5;
+        --success-soft: #ffffff;
+        --warning-soft: #ffffff;
+        --danger-soft: #ffffff;
+        --info-soft: #ffffff;
+        --success-ink: #047857;
+        --warning-ink: #92400e;
+        --danger-ink: #be123c;
+        --info-ink: #1d4ed8;
+    }
     body {
         background-color: white !important;
         color: #0f172a !important;
@@ -30,7 +118,7 @@
     }
     
     /* Force full width on print containers and remove border boxes */
-    .max-w-6xl, .max-w-4xl, .mx-auto, .rounded-2xl, .bg-white {
+    .max-w-6xl, .max-w-4xl, .mx-auto, .rounded-2xl, .bg-white, .bg-surface {
         max-width: 100% !important;
         width: 100% !important;
         margin: 0 !important;

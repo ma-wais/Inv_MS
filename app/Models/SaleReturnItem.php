@@ -12,7 +12,7 @@ class SaleReturnItem extends Model
 
     protected $fillable = [
         'tenant_id', 'sale_return_id', 'sale_item_id', 'product_variant_id', 'product_batch_id',
-        'quantity', 'unit_price', 'line_total',
+        'quantity', 'unit_price', 'line_total', 'unit_cost',
     ];
 
     protected function casts(): array
@@ -20,6 +20,7 @@ class SaleReturnItem extends Model
         return [
             'quantity' => 'decimal:6',
             'unit_price' => 'decimal:4',
+            'unit_cost' => 'decimal:4',
             'line_total' => 'decimal:4',
         ];
     }
@@ -37,5 +38,10 @@ class SaleReturnItem extends Model
     public function saleItem()
     {
         return $this->belongsTo(SaleItem::class, 'sale_item_id');
+    }
+
+    public function returnDoc()
+    {
+        return $this->belongsTo(SaleReturn::class, 'sale_return_id');
     }
 }

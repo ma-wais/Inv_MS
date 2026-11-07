@@ -22,47 +22,47 @@ export default function TrialBalance({ trialBalance, filters }) {
 
             <div className="max-w-4xl mx-auto space-y-6">
                 <div className="flex justify-between items-center">
-                    <h1 className="text-xl font-bold text-slate-800">Financial Reports</h1>
+                    <h1 className="text-xl font-bold text-foreground">Financial Reports</h1>
                     {isBalanced ? (
-                        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">Balanced ✅</span>
+                        <span className="text-xs font-semibold text-success-ink bg-success-soft px-3 py-1 rounded-full">Balanced ✅</span>
                     ) : (
-                        <span className="text-xs font-semibold text-red-600 bg-red-50 px-3 py-1 rounded-full">Unbalanced (Diff: PKR {difference.toLocaleString()}) ❌</span>
+                        <span className="text-xs font-semibold text-danger-ink bg-danger-soft px-3 py-1 rounded-full">Unbalanced (Diff: PKR {difference.toLocaleString()}) ❌</span>
                     )}
                 </div>
 
-                <form onSubmit={handleFilterSubmit} className="flex flex-wrap items-end gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm print:hidden">
+                <form onSubmit={handleFilterSubmit} className="flex flex-wrap items-end gap-4 bg-surface p-5 rounded-2xl border border-line shadow-sm print:hidden">
                     <div className="flex-1 min-w-[200px]">
-                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date From</label>
+                        <label className="block text-xs font-semibold text-muted uppercase mb-1">Date From</label>
                         <input
                             type="date"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-slate-700"
+                            className="w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-foreground"
                         />
                     </div>
                     <div className="flex-1 min-w-[200px]">
-                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date To</label>
+                        <label className="block text-xs font-semibold text-muted uppercase mb-1">Date To</label>
                         <input
                             type="date"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-slate-700"
+                            className="w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm outline-none focus:border-emerald-500 font-medium text-foreground"
                         />
                     </div>
                     <button
                         type="submit"
-                        className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-900 transition-colors cursor-pointer"
+                        className="rounded-xl bg-action px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-900 transition-colors cursor-pointer"
                     >
                         Apply Filter
                     </button>
                 </form>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 className="text-base font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4">Trial Balance Report</h2>
+                <div className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
+                    <h2 className="text-base font-bold text-foreground border-b border-line-soft pb-3 mb-4">Trial Balance Report</h2>
                     
-                    <div className="overflow-hidden rounded-xl border border-slate-100">
+                    <div className="overflow-hidden rounded-xl border border-line-soft">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <thead className="bg-surface-muted text-xs uppercase text-muted">
                                 <tr>
                                     <th className="px-4 py-3">Account Code</th>
                                     <th>Account Name</th>
@@ -71,27 +71,27 @@ export default function TrialBalance({ trialBalance, filters }) {
                                     <th className="text-right px-4">Credit Balance</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-line-soft">
                                 {trialBalance.map((row) => (
-                                    <tr key={row.id} className="hover:bg-slate-50/20">
-                                        <td className="px-4 py-2.5 font-medium text-slate-600">{row.code}</td>
-                                        <td className="font-semibold text-slate-800">{row.name}</td>
-                                        <td className="capitalize text-slate-500 text-xs">{row.type}</td>
-                                        <td className="text-right text-slate-800 font-medium">
+                                    <tr key={row.id} className="hover:bg-surface-muted/20">
+                                        <td className="px-4 py-2.5 font-medium text-muted">{row.code}</td>
+                                        <td className="font-semibold text-foreground">{row.name}</td>
+                                        <td className="capitalize text-muted text-xs">{row.type}</td>
+                                        <td className="text-right text-foreground font-medium">
                                             {Number(row.debit) > 0 ? money(row.debit) : '—'}
                                         </td>
-                                        <td className="text-right text-slate-800 font-medium px-4">
+                                        <td className="text-right text-foreground font-medium px-4">
                                             {Number(row.credit) > 0 ? money(row.credit) : '—'}
                                         </td>
                                     </tr>
                                 ))}
                                 {/* Total row */}
-                                <tr className="bg-slate-50 font-bold border-t-2 border-slate-200">
-                                    <td className="px-4 py-3 text-slate-900" colSpan="3">Total</td>
-                                    <td className="text-right text-emerald-800">
+                                <tr className="bg-surface-muted font-bold border-t-2 border-line">
+                                    <td className="px-4 py-3 text-foreground" colSpan="3">Total</td>
+                                    <td className="text-right text-success-ink">
                                         PKR {money(totalDebit)}
                                     </td>
-                                    <td className="text-right text-emerald-800 px-4">
+                                    <td className="text-right text-success-ink px-4">
                                         PKR {money(totalCredit)}
                                     </td>
                                 </tr>

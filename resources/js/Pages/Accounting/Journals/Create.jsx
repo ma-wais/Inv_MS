@@ -1,3 +1,4 @@
+import { today } from '../../../Components/utils';
 import React, { useMemo } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
@@ -6,7 +7,7 @@ import SearchableSelect from '../../../Components/SearchableSelect';
 
 export default function Create({ accounts }) {
     const form = useForm({
-        entry_date: new Date().toISOString().slice(0, 10),
+        entry_date: today(),
         description: '',
         reference_number: '',
         lines: [
@@ -69,8 +70,8 @@ export default function Create({ accounts }) {
 
             <form onSubmit={submit} className="space-y-4">
                 {/* Header card */}
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h2 className="font-semibold text-slate-800 text-base mb-4">Header Info</h2>
+                <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+                    <h2 className="font-semibold text-foreground text-base mb-4">Header Info</h2>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <FloatingInput
                             label="Entry Date"
@@ -96,37 +97,37 @@ export default function Create({ accounts }) {
                                 onChange={(e) => form.setData('description', e.target.value)}
                                 placeholder=" "
                                 required
-                                className="peer block w-full rounded-xl border border-slate-200 bg-white px-4 pb-2 pt-5 text-sm text-slate-800 outline-none transition-all focus:border-emerald-500 min-h-16"
+                                className="peer block w-full rounded-xl border border-line bg-surface px-4 pb-2 pt-5 text-sm text-foreground outline-none transition-all focus:border-emerald-500 min-h-16"
                             />
                             <label
                                 htmlFor="description"
-                                className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-slate-400 duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
+                                className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-subtle duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
                             >
                                 Entry Narrative/Description
                             </label>
-                            {form.errors.description && <span className="mt-1 block text-xs text-red-600">{form.errors.description}</span>}
+                            {form.errors.description && <span className="mt-1 block text-xs text-danger-ink">{form.errors.description}</span>}
                         </div>
                     </div>
                 </section>
 
                 {/* Lines card */}
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="font-semibold text-slate-800 text-base">Journal Lines</h2>
+                        <h2 className="font-semibold text-foreground text-base">Journal Lines</h2>
                         <button
                             type="button"
                             onClick={addLine}
-                            className="rounded-lg border border-slate-200 px-3.5 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
+                            className="rounded-lg border border-line px-3.5 py-1.5 text-xs font-semibold hover:bg-surface-muted transition-colors cursor-pointer"
                         >
                             + Add Line
                         </button>
                     </div>
 
-                    {form.errors.lines && <div className="mb-4 text-sm text-red-600 font-semibold">{form.errors.lines}</div>}
+                    {form.errors.lines && <div className="mb-4 text-sm text-danger-ink font-semibold">{form.errors.lines}</div>}
 
                     <div className="space-y-3">
                         {form.data.lines.map((line, index) => (
-                            <div key={index} className="grid gap-3 rounded-xl border border-slate-100 p-4 lg:grid-cols-12 items-center bg-slate-50/30">
+                            <div key={index} className="grid gap-3 rounded-xl border border-line-soft p-4 lg:grid-cols-12 items-center bg-surface-muted/30">
                                 {/* Account selector */}
                                 <div className="lg:col-span-4">
                                     <SearchableSelect
@@ -180,7 +181,7 @@ export default function Create({ accounts }) {
                                     <button
                                         type="button"
                                         onClick={() => removeLine(index)}
-                                        className="rounded-lg border border-red-200 p-2.5 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                        className="rounded-lg border border-danger-ink/30 p-2.5 text-danger-ink hover:bg-danger-soft transition-colors cursor-pointer"
                                         title="Remove Line"
                                     >
                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -193,23 +194,23 @@ export default function Create({ accounts }) {
                     </div>
 
                     {/* Totals panel */}
-                    <div className="mt-4 border-t border-slate-100 pt-4 flex flex-wrap justify-between items-center gap-4">
+                    <div className="mt-4 border-t border-line-soft pt-4 flex flex-wrap justify-between items-center gap-4">
                         <div className="flex gap-6 text-sm">
                             <div>
-                                <span className="text-slate-500 font-medium">Total Debits:</span>
-                                <span className="ml-2 font-bold text-slate-800">PKR {totals.debits.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                <span className="text-muted font-medium">Total Debits:</span>
+                                <span className="ml-2 font-bold text-foreground">PKR {totals.debits.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                             </div>
                             <div>
-                                <span className="text-slate-500 font-medium">Total Credits:</span>
-                                <span className="ml-2 font-bold text-slate-800">PKR {totals.credits.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                <span className="text-muted font-medium">Total Credits:</span>
+                                <span className="ml-2 font-bold text-foreground">PKR {totals.credits.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                             </div>
                         </div>
 
                         <div className="text-right">
                             {totals.isBalanced ? (
-                                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">Balanced ✅</span>
+                                <span className="text-xs font-semibold text-success-ink bg-success-soft px-3 py-1 rounded-full">Balanced ✅</span>
                             ) : (
-                                <span className="text-xs font-semibold text-red-600 bg-red-50 px-3 py-1 rounded-full">
+                                <span className="text-xs font-semibold text-danger-ink bg-danger-soft px-3 py-1 rounded-full">
                                     Unbalanced (Diff: PKR {totals.difference.toLocaleString(undefined, { minimumFractionDigits: 2 })}) ❌
                                 </span>
                             )}
@@ -221,13 +222,13 @@ export default function Create({ accounts }) {
                     <button
                         type="submit"
                         disabled={form.processing || !totals.isBalanced}
-                        className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white disabled:opacity-60 hover:bg-slate-800 transition-colors cursor-pointer"
+                        className="rounded-xl bg-action px-6 py-3 text-sm font-semibold text-white disabled:opacity-60 hover:bg-slate-800 transition-colors cursor-pointer"
                     >
                         Post Journal Entry
                     </button>
                     <Link
                         href="/journals"
-                        className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold hover:bg-slate-50 transition-colors"
+                        className="rounded-xl border border-line bg-surface px-6 py-3 text-sm font-semibold hover:bg-surface-muted transition-colors"
                     >
                         Cancel
                     </Link>

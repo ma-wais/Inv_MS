@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\ShopRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'phone', 'password', 'is_super_admin', 'status', 'image_path'])]
+#[Fillable(['name', 'email', 'phone', 'cnic', 'password', 'is_super_admin', 'status', 'image_path'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -42,11 +43,11 @@ class User extends Authenticatable
     {
         $tenantId = $tenant instanceof Tenant ? $tenant->id : $tenant;
 
-        return $this->tenants()
+        return ShopRole::normalize($this->tenants()
             ->where('tenants.id', $tenantId)
             ->first()
             ?->pivot
-            ?->role;
+            ?->role);
     }
 
     public function hasPermission(string $permission, ?Tenant $tenant): bool
@@ -61,9 +62,8 @@ class User extends Authenticatable
 
         $role = $this->roleFor($tenant);
 
-        return Role::query()
-            ->where('slug', $role)
-            ->whereHas('permissions', fn ($query) => $query->where('slug', $permission))
-            ->exists();
+        return in_array($permission, $role === ShopRole::ADMIN
+            ? ShopRole::PERMISSIONS
+            : ($role === ShopRole::WORKER ? ShopRole::WORKER_PERMISSIONS : []), true);
     }
 }

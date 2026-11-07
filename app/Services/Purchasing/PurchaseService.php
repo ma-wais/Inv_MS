@@ -11,6 +11,8 @@ use App\Models\StockMovement;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use App\Models\Warehouse;
+use App\Services\Accounting\AutomaticPostingService;
+use App\Services\Accounting\InvoiceAllocationService;
 use App\Services\DocumentNumberService;
 use App\Services\Inventory\StockMovementService;
 use App\Support\Tenancy\TenantContext;
@@ -23,7 +25,8 @@ class PurchaseService
         private readonly TenantContext $tenantContext,
         private readonly DocumentNumberService $documentNumbers,
         private readonly StockMovementService $stockMovements,
-        private readonly \App\Services\Accounting\AutomaticPostingService $postings,
+        private readonly AutomaticPostingService $postings,
+        private readonly InvoiceAllocationService $allocations = new InvoiceAllocationService,
     ) {}
 
     public function create(array $data, array $items): Purchase
@@ -83,12 +86,14 @@ class PurchaseService
                 'notes' => $data['notes'] ?? null,
             ]);
 
+            $normalizedItems = $this->allocations->allocate($normalizedItems, $grandTotal);
             $normalizedItems->each(fn (array $item) => $purchase->items()->create([
                 'tenant_id' => $this->tenantContext->id(),
                 'product_variant_id' => $item['variant']->id,
                 'quantity' => $item['quantity'],
                 'unit_cost' => $item['unit_cost'],
                 'line_total' => $item['line_total'],
+                'net_total' => $item['net_total'],
                 'batch_number' => $item['batch_number'],
                 'expires_at' => $item['expires_at'],
             ]));
@@ -99,11 +104,11 @@ class PurchaseService
 
     public function receive(Purchase $purchase): Purchase
     {
-        if (in_array($purchase->status, [Purchase::STATUS_RECEIVED, Purchase::STATUS_POSTED, Purchase::STATUS_CANCELLED], true)) {
-            throw new InvalidArgumentException('This purchase cannot be received in its current status.');
-        }
-
         return DB::transaction(function () use ($purchase): Purchase {
+            $purchase = Purchase::query()->lockForUpdate()->findOrFail($purchase->id);
+            if (in_array($purchase->status, [Purchase::STATUS_RECEIVED, Purchase::STATUS_POSTED, Purchase::STATUS_CANCELLED], true)) {
+                throw new InvalidArgumentException('This purchase cannot be received in its current status.');
+            }
             $purchase->load(['items.variant.product', 'warehouse']);
 
             foreach ($purchase->items as $item) {
@@ -133,7 +138,7 @@ class PurchaseService
                         StockMovement::TYPE_PURCHASE,
                         $quantityToReceive,
                         batch: $batch,
-                        unitCost: $item->unit_cost,
+                        unitCost: round((float) $item->net_total / (float) $item->quantity, 4),
                         reference: $purchase,
                         referenceNumber: $purchase->number,
                         note: 'Purchase received.',
@@ -164,10 +169,16 @@ class PurchaseService
         }
 
         return DB::transaction(function () use ($supplier, $data, $amount): SupplierPayment {
-            $purchase = isset($data['purchase_id']) ? Purchase::query()->findOrFail($data['purchase_id']) : null;
+            $purchase = ! empty($data['purchase_id']) ? Purchase::query()->lockForUpdate()->findOrFail($data['purchase_id']) : null;
 
             if ($purchase && $purchase->supplier_id !== $supplier->id) {
                 throw new InvalidArgumentException('The selected purchase does not belong to this supplier.');
+            }
+            if ($purchase && ($purchase->status !== Purchase::STATUS_POSTED || $amount > (float) $purchase->grand_total - (float) $purchase->paid_total - (float) $purchase->returns()->sum('total') + 0.00001)) {
+                throw new InvalidArgumentException('Payment exceeds the amount due, or the purchase has not been received.');
+            }
+            if (! in_array($data['method'], ['cash', 'bank', 'card', 'mobile'], true)) {
+                throw new InvalidArgumentException('Choose a supported payment method.');
             }
 
             $payment = SupplierPayment::create([
@@ -204,7 +215,14 @@ class PurchaseService
         }
 
         return DB::transaction(function () use ($purchase, $data, $items): PurchaseReturn {
-            $purchase->load(['items.variant', 'warehouse']);
+            $purchase = Purchase::query()->lockForUpdate()->findOrFail($purchase->id);
+            if ($purchase->status !== Purchase::STATUS_POSTED) {
+                throw new InvalidArgumentException('Only posted purchases can be returned.');
+            }
+            $purchase->load(['items.variant.product.baseUnit', 'warehouse']);
+            if (count(array_unique(array_column($items, 'purchase_item_id'))) !== count($items)) {
+                throw new InvalidArgumentException('Select each invoice item only once.');
+            }
             $return = PurchaseReturn::create([
                 'supplier_id' => $purchase->supplier_id,
                 'purchase_id' => $purchase->id,
@@ -233,14 +251,21 @@ class PurchaseService
                     throw new InvalidArgumentException("Return quantity for {$purchaseItem->variant->sku} exceeds received stock.");
                 }
 
-                $lineTotal = round($quantity * (float) $purchaseItem->unit_cost, 4);
+                if (! $purchaseItem->variant->product->baseUnit->allows_decimal && floor($quantity) !== $quantity) {
+                    throw new InvalidArgumentException('This product must be returned in whole units.');
+                }
+                $lineTotal = $this->allocations->returnCredit(
+                    (float) $purchaseItem->net_total, (float) $purchaseItem->quantity,
+                    (float) $purchaseItem->returned_quantity, $quantity,
+                    (float) $purchaseItem->returnItems()->sum('line_total'),
+                );
                 $this->stockMovements->record(
                     $purchase->warehouse,
                     $purchaseItem->variant,
                     StockMovement::TYPE_PURCHASE_RETURN,
                     -$quantity,
                     batch: $purchaseItem->product_batch_id ? ProductBatch::query()->find($purchaseItem->product_batch_id) : null,
-                    unitCost: $purchaseItem->unit_cost,
+                    unitCost: round((float) $purchaseItem->net_total / (float) $purchaseItem->quantity, 4),
                     reference: $return,
                     referenceNumber: $return->number,
                     note: 'Purchase return posted.',

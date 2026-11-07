@@ -6,9 +6,9 @@ use App\Models\Customer;
 use App\Models\ProductBatch;
 use App\Models\ProductVariant;
 use App\Models\SaleItem;
+use App\Models\SaleReturnItem;
 use App\Models\Supplier;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class OperationalReportService
 {
@@ -40,44 +40,41 @@ class OperationalReportService
 
     public function productProfit(?string $startDate = null, ?string $endDate = null): Collection
     {
-        // Get all sold items from posted sales
-        return SaleItem::query()
-            ->select('product_variant_id', DB::raw('SUM(quantity) as quantity_sold'), DB::raw('SUM(line_total) as revenue'))
-            ->whereHas('sale', function ($query) use ($startDate, $endDate) {
-                $query->where('status', 'posted');
-                if ($startDate) {
-                    $query->whereDate('sale_date', '>=', $startDate);
-                }
-                if ($endDate) {
-                    $query->whereDate('sale_date', '<=', $endDate);
-                }
-            })
-            ->groupBy('product_variant_id')
-            ->with(['variant.product'])
-            ->get()
-            ->map(function (SaleItem $item) {
-                $variant = $item->variant;
-                $quantitySold = (float) $item->quantity_sold;
-                $revenue = (float) $item->revenue;
-                
-                // COGS = Quantity Sold * Variant Purchase Price (Cost)
-                $purchasePrice = $variant ? (float) $variant->purchase_price : 0.0;
-                $cogs = round($quantitySold * $purchasePrice, 4);
-                $profit = round($revenue - $cogs, 4);
-
-                return [
-                    'variant_id' => $item->product_variant_id,
-                    'sku' => $variant ? $variant->sku : 'DELETED',
-                    'name' => $variant ? $variant->name : 'DELETED',
-                    'product_name' => ($variant && $variant->product) ? $variant->product->name : 'DELETED',
-                    'quantity_sold' => $quantitySold,
-                    'revenue' => $revenue,
-                    'cogs' => $cogs,
-                    'profit' => $profit,
+        $sales = SaleItem::query()->select('product_variant_id')
+            ->selectRaw('SUM(quantity) as quantity_sold, SUM(COALESCE(net_total, line_total)) as revenue, SUM(quantity * COALESCE(unit_cost, 0)) as cogs, SUM(CASE WHEN unit_cost IS NULL THEN 1 ELSE 0 END) as unknown_costs')
+            ->whereHas('sale', fn ($query) => $query->where('status', 'posted')
+                ->when($startDate, fn ($query) => $query->where('sale_date', '>=', $startDate))
+                ->when($endDate, fn ($query) => $query->where('sale_date', '<=', $endDate)))
+            ->groupBy('product_variant_id')->with('variant.product')->get();
+        $returns = SaleReturnItem::query()->select('product_variant_id')
+            ->selectRaw('SUM(quantity) as quantity_sold, SUM(line_total) as revenue, SUM(quantity * COALESCE(unit_cost, 0)) as cogs, SUM(CASE WHEN unit_cost IS NULL THEN 1 ELSE 0 END) as unknown_costs')
+            ->whereHas('returnDoc', fn ($query) => $query->where('status', 'posted')
+                ->when($startDate, fn ($query) => $query->where('return_date', '>=', $startDate))
+                ->when($endDate, fn ($query) => $query->where('return_date', '<=', $endDate)))
+            ->groupBy('product_variant_id')->with('variant.product')->get();
+        $rows = [];
+        foreach ([[$sales, 1], [$returns, -1]] as [$events, $sign]) {
+            foreach ($events as $item) {
+                $id = $item->product_variant_id;
+                $rows[$id] ??= [
+                    'variant_id' => $id, 'sku' => $item->variant?->sku ?? 'DELETED',
+                    'name' => $item->variant?->name ?? 'DELETED', 'product_name' => $item->variant?->product?->name ?? 'DELETED',
+                    'quantity_sold' => 0.0, 'revenue' => 0.0, 'cogs' => 0.0, 'profit' => 0.0, 'cost_history_missing' => false,
                 ];
-            })
-            ->sortByDesc('profit')
-            ->values();
+                foreach (['quantity_sold', 'revenue', 'cogs'] as $field) {
+                    $rows[$id][$field] += $sign * (float) $item->{$field};
+                }
+                $rows[$id]['cost_history_missing'] = $rows[$id]['cost_history_missing'] || $item->unknown_costs > 0;
+            }
+        }
+
+        return collect($rows)->map(function (array $row) {
+            $row['revenue'] = round($row['revenue'], 4);
+            $row['cogs'] = round($row['cogs'], 4);
+            $row['profit'] = round($row['revenue'] - $row['cogs'], 4);
+
+            return $row;
+        })->sortByDesc('profit')->values();
     }
 
     public function expiryReport(): Collection
@@ -112,7 +109,7 @@ class OperationalReportService
     public function receivablesPayables(): array
     {
         $receivables = Customer::query()
-            ->get()
+            ->withLedgerTotals()->get()
             ->map(function (Customer $customer) {
                 return [
                     'id' => $customer->id,
@@ -127,7 +124,7 @@ class OperationalReportService
             ->values();
 
         $payables = Supplier::query()
-            ->get()
+            ->withLedgerTotals()->get()
             ->map(function (Supplier $supplier) {
                 return [
                     'id' => $supplier->id,

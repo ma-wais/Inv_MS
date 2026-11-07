@@ -12,7 +12,7 @@ class Supplier extends Model
 
     protected $fillable = [
         'tenant_id', 'name', 'code', 'contact_person', 'email', 'phone', 'address', 'tax_number',
-        'opening_balance', 'is_active', 'notes',
+        'opening_balance', 'is_active', 'notes', 'cnic',
     ];
 
     protected function casts(): array
@@ -42,6 +42,11 @@ class Supplier extends Model
 
     public function ledgerBalance(): float
     {
+        if (array_key_exists('ledger_purchases_total', $this->attributes)) {
+            return (float) $this->opening_balance + (float) $this->ledger_purchases_total
+                - (float) $this->ledger_returns_total - (float) $this->ledger_payments_total;
+        }
+
         return (float) $this->opening_balance
             + (float) $this->purchases()->where('status', Purchase::STATUS_POSTED)->sum('grand_total')
             - (float) $this->returns()->where('status', 'posted')->sum('total')
@@ -51,5 +56,12 @@ class Supplier extends Model
     public function getLedgerBalanceAttribute(): float
     {
         return $this->ledgerBalance();
+    }
+
+    public function scopeWithLedgerTotals($query)
+    {
+        return $query->withSum(['purchases as ledger_purchases_total' => fn ($query) => $query->where('status', 'posted')], 'grand_total')
+            ->withSum(['returns as ledger_returns_total' => fn ($query) => $query->where('status', 'posted')], 'total')
+            ->withSum('payments as ledger_payments_total', 'amount');
     }
 }

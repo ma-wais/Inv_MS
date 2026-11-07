@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Tenant;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
@@ -23,14 +24,17 @@ class DocumentNumberService
         }
 
         $datePrefix = $prefix.'-'.now()->format('Ym').'-';
+        // Called inside the document transaction so concurrent tills cannot reuse a number.
+        Tenant::query()->whereKey($tenantId)->lockForUpdate()->firstOrFail();
         $latest = $model::query()
             ->withoutGlobalScopes()
             ->where('tenant_id', $tenantId)
             ->where('number', 'like', $datePrefix.'%')
-            ->orderByDesc('number')
+            ->orderByDesc('id')
+            ->lockForUpdate()
             ->value('number');
 
-        $sequence = $latest ? ((int) substr($latest, -5)) + 1 : 1;
+        $sequence = $latest ? ((int) substr($latest, strlen($datePrefix))) + 1 : 1;
 
         return $datePrefix.str_pad((string) $sequence, 5, '0', STR_PAD_LEFT);
     }

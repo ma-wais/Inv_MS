@@ -1,3 +1,4 @@
+import SearchableSelect from '../../../Components/SearchableSelect';
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import React, { useState } from 'react';
@@ -40,15 +41,15 @@ export default function Show({ product, units }) {
         <AuthenticatedLayout title={product.name}>
             <Head title={product.name} />
 
-            {flash.status && <div className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{flash.status}</div>}
+            {flash.status && <div className="mb-5 rounded-xl bg-success-soft px-4 py-3 text-sm font-medium text-success-ink">{flash.status}</div>}
 
             <section className="grid gap-6 xl:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
+                <div className="rounded-2xl border border-line bg-surface p-6 shadow-sm xl:col-span-2">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                            <p className="text-sm capitalize text-slate-500">{product.product_type}</p>
+                            <p className="text-sm capitalize text-muted">{product.product_type}</p>
                             <h2 className="mt-1 text-2xl font-bold">{product.name}</h2>
-                            <p className="mt-2 text-sm text-slate-500">
+                            <p className="mt-2 text-sm text-muted">
                                 {product.category?.name ?? 'Uncategorized'} · {product.brand?.name ?? 'No brand'} · {product.base_unit.symbol}
                             </p>
                         </div>
@@ -61,7 +62,7 @@ export default function Show({ product, units }) {
                     <h3 className="mt-8 font-semibold">Variants</h3>
                     <div className="mt-3 overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="border-b border-slate-200 text-xs uppercase text-slate-400">
+                            <thead className="border-b border-line text-xs uppercase text-subtle">
                                 <tr>
                                     <th className="py-3">Variant</th>
                                     <th>SKU / Barcode</th>
@@ -70,12 +71,12 @@ export default function Show({ product, units }) {
                                     <th className="text-right py-3">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-line-soft">
                                 {product.variants.map((variant) => (
                                     <tr key={variant.id}>
                                         <td className="py-4 font-medium">{variant.name}</td>
-                                        <td><p>{variant.sku}</p><p className="text-xs text-slate-400">{variant.barcodes[0]?.barcode ?? 'No barcode'}</p></td>
-                                        <td><p>Sale: {money(variant.sale_price)}</p><p className="text-xs text-slate-400">Cost: {money(variant.purchase_price)}</p></td>
+                                        <td><p>{variant.sku}</p><p className="text-xs text-subtle">{variant.barcodes[0]?.barcode ?? 'No barcode'}</p></td>
+                                        <td><p>Sale: {money(variant.sale_price)}</p><p className="text-xs text-subtle">Cost: {money(variant.purchase_price)}</p></td>
                                         <td className="font-semibold">{quantity(variant.stock_balances.reduce((sum, row) => sum + Number(row.quantity), 0))}</td>
                                         <td className="py-4 text-right">
                                             <button
@@ -100,12 +101,12 @@ export default function Show({ product, units }) {
 
             {editingVariant && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity">
-                    <div className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl animate-scale-up">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                            <h3 className="text-lg font-bold text-slate-800">Edit Variant</h3>
+                    <div className="relative w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-xl animate-scale-up">
+                        <div className="flex items-center justify-between border-b border-line-soft pb-3 mb-4">
+                            <h3 className="text-lg font-bold text-foreground">Edit Variant</h3>
                             <button
                                 onClick={() => setEditingVariant(null)}
-                                className="text-slate-400 hover:text-slate-600 transition-colors"
+                                className="text-subtle hover:text-muted transition-colors"
                             >
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -184,14 +185,14 @@ export default function Show({ product, units }) {
                                 <button
                                     type="button"
                                     onClick={() => setEditingVariant(null)}
-                                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 cursor-pointer"
+                                    className="w-full rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-muted cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={editForm.processing}
-                                    className="w-full rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-60 cursor-pointer"
+                                    className="w-full rounded-xl bg-action px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-60 cursor-pointer"
                                 >
                                     Save Changes
                                 </button>
@@ -213,7 +214,7 @@ function VariantForm({ productId }) {
                     <label key={field} className="block text-sm font-medium capitalize">
                         {field.replaceAll('_', ' ')}
                         <input type={field.includes('price') || field === 'reorder_level' ? 'number' : 'text'} step="any" value={form.data[field]} onChange={(e) => form.setData(field, e.target.value)} className={inputClass} />
-                        {form.errors[field] && <span className="mt-1 block text-xs text-red-600">{form.errors[field]}</span>}
+                        {form.errors[field] && <span className="mt-1 block text-xs text-danger-ink">{form.errors[field]}</span>}
                     </label>
                 ))}
                 <Button form={form}>Add variant</Button>
@@ -227,26 +228,23 @@ function ConversionForm({ productId, units, conversions }) {
     return (
         <Card title="Unit conversions">
             <div className="mb-4 space-y-2">
-                {conversions.map((conversion) => <p key={conversion.id} className="rounded-lg bg-slate-50 px-3 py-2 text-sm">1 {conversion.unit.symbol} = {quantity(conversion.base_quantity)} base units</p>)}
+                {conversions.map((conversion) => <p key={conversion.id} className="rounded-lg bg-surface-muted px-3 py-2 text-sm">1 {conversion.unit.symbol} = {quantity(conversion.base_quantity)} base units</p>)}
             </div>
             <form onSubmit={(e) => post(e, form, `/products/${productId}/unit-conversions`)} className="space-y-3">
-                <select value={form.data.unit_id} onChange={(e) => form.setData('unit_id', e.target.value)} className={inputClass}>
-                    <option value="">Select alternate unit</option>
-                    {units.map((unit) => <option key={unit.id} value={unit.id}>{unit.name} ({unit.symbol})</option>)}
-                </select>
+                <SearchableSelect label="Alternate unit" value={form.data.unit_id} onChange={e => form.setData('unit_id', e.target.value)} options={units.map(unit => [unit.id, `${unit.name} (${unit.symbol})`])} empty="Select alternate unit" required error={form.errors.unit_id} />
                 <input type="number" step="any" placeholder="Base quantity" value={form.data.base_quantity} onChange={(e) => form.setData('base_quantity', e.target.value)} className={inputClass} />
                 <input placeholder="Optional barcode" value={form.data.barcode} onChange={(e) => form.setData('barcode', e.target.value)} className={inputClass} />
-                {Object.values(form.errors)[0] && <p className="text-xs text-red-600">{Object.values(form.errors)[0]}</p>}
+                {Object.values(form.errors)[0] && <p className="text-xs text-danger-ink">{Object.values(form.errors)[0]}</p>}
                 <Button form={form}>Add conversion</Button>
             </form>
         </Card>
     );
 }
 
-function Card({ title, children }) { return <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><h3 className="mb-4 font-semibold">{title}</h3>{children}</div>; }
-function Badge({ children }) { return <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">{children}</span>; }
-function Button({ form, children }) { return <button disabled={form.processing} className="rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{children}</button>; }
+function Card({ title, children }) { return <div className="rounded-2xl border border-line bg-surface p-5 shadow-sm"><h3 className="mb-4 font-semibold">{title}</h3>{children}</div>; }
+function Badge({ children }) { return <span className="rounded-full bg-success-soft px-3 py-1 text-xs font-semibold text-success-ink">{children}</span>; }
+function Button({ form, children }) { return <button disabled={form.processing} className="rounded-lg bg-action px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{children}</button>; }
 function post(event, form, url) { event.preventDefault(); form.post(url, { preserveScroll: true, onSuccess: () => form.reset() }); }
 function money(value) { return Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function quantity(value) { return Number(value).toLocaleString(undefined, { maximumFractionDigits: 3 }); }
-const inputClass = 'mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500';
+const inputClass = 'mt-1 w-full rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-emerald-500';

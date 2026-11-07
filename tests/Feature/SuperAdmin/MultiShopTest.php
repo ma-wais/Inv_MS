@@ -4,6 +4,7 @@ namespace Tests\Feature\SuperAdmin;
 
 use App\Models\Account;
 use App\Models\Branch;
+use App\Models\Permission;
 use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
@@ -21,7 +22,7 @@ class MultiShopTest extends TestCase
         parent::setUp();
 
         // Seed basic permissions globally if any tests require them
-        \App\Models\Permission::create(['name' => 'View dashboard', 'slug' => 'dashboard.view', 'group' => 'dashboard']);
+        Permission::create(['name' => 'View dashboard', 'slug' => 'dashboard.view', 'group' => 'dashboard']);
     }
 
     public function test_guest_can_register_new_shop_with_seeded_defaults(): void
@@ -49,16 +50,23 @@ class MultiShopTest extends TestCase
 
         // Assert role assignment
         $this->assertTrue($user->tenants()->where('tenants.id', $tenant->id)->exists());
-        $this->assertSame('owner', $user->roleFor($tenant));
+        $this->assertSame('admin', $user->roleFor($tenant));
 
         // Assert branch & warehouse seeding
         $this->assertDatabaseHas('branches', ['tenant_id' => $tenant->id, 'code' => 'MAIN']);
         $this->assertDatabaseHas('warehouses', ['tenant_id' => $tenant->id, 'code' => 'MAIN-WH']);
 
         // Assert standard units seeding
-        $this->assertSame(5, Unit::where('tenant_id', $tenant->id)->count());
+        $this->assertSame(8, Unit::where('tenant_id', $tenant->id)->count());
         $this->assertDatabaseHas('units', ['tenant_id' => $tenant->id, 'symbol' => 'pc']);
         $this->assertDatabaseHas('units', ['tenant_id' => $tenant->id, 'symbol' => 'L']);
+        foreach (['g', 'ml', 'm'] as $symbol) {
+            $this->assertDatabaseHas('units', ['tenant_id' => $tenant->id, 'symbol' => $symbol]);
+        }
+        $this->assertSame(['admin', 'worker'], $tenant->roles()->orderBy('slug')->pluck('slug')->all());
+        $this->assertDatabaseHas('categories', ['tenant_id' => $tenant->id, 'slug' => 'general']);
+        $this->assertDatabaseCount('products', 0);
+        $this->assertDatabaseCount('brands', 0);
 
         // Assert Chart of Accounts seeding
         $this->assertSame(14, Account::where('tenant_id', $tenant->id)->count()); // 5 headers + 9 default accounts
@@ -83,7 +91,7 @@ class MultiShopTest extends TestCase
             'is_super_admin' => false,
         ]);
 
-        $tenant->users()->attach($user->id, ['role' => 'manager', 'is_default' => true]);
+        $tenant->users()->attach($user->id, ['role' => 'worker', 'is_default' => true]);
 
         $response = $this->actingAs($user)
             ->withSession(['tenant_id' => $tenant->id])
@@ -145,7 +153,7 @@ class MultiShopTest extends TestCase
             ->post('/super-admin/tenants', [
                 'name' => 'Fancy Store',
                 'slug' => 'fancy-store',
-                'phone' => '090078601',
+                'phone' => '+923001234567',
                 'currency' => 'USD',
                 'timezone' => 'America/New_York',
             ]);
@@ -154,7 +162,7 @@ class MultiShopTest extends TestCase
         $this->assertDatabaseHas('tenants', [
             'name' => 'Fancy Store',
             'slug' => 'fancy-store',
-            'phone' => '090078601',
+            'phone' => '+923001234567',
             'currency' => 'USD',
             'timezone' => 'America/New_York',
         ]);
@@ -171,7 +179,7 @@ class MultiShopTest extends TestCase
         $response2 = $this->actingAs($superAdmin)
             ->put("/super-admin/tenants/{$tenant->id}", [
                 'name' => 'Fancy Store Updated',
-                'phone' => '111222333',
+                'phone' => '+923111234567',
                 'currency' => 'EUR',
                 'timezone' => 'UTC',
             ]);
@@ -180,7 +188,7 @@ class MultiShopTest extends TestCase
         $this->assertDatabaseHas('tenants', [
             'id' => $tenant->id,
             'name' => 'Fancy Store Updated',
-            'phone' => '111222333',
+            'phone' => '+923111234567',
             'currency' => 'EUR',
             'timezone' => 'UTC',
         ]);
@@ -245,12 +253,12 @@ class MultiShopTest extends TestCase
         $response4 = $this->actingAs($superAdmin)
             ->post("/super-admin/users/{$newUser->id}/tenants", [
                 'tenant_id' => $tenant->id,
-                'role' => 'manager',
+                'role' => 'worker',
             ]);
 
         $response4->assertRedirect();
         $this->assertTrue($newUser->tenants()->where('tenants.id', $tenant->id)->exists());
-        $this->assertSame('manager', $newUser->roleFor($tenant));
+        $this->assertSame('worker', $newUser->roleFor($tenant));
 
         // Unlink User from Shop
         $response5 = $this->actingAs($superAdmin)
@@ -284,4 +292,3 @@ class MultiShopTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $superAdmin->id]);
     }
 }
-

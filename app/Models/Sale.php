@@ -30,7 +30,7 @@ class Sale extends Model
         ];
     }
 
-    protected $appends = ['outstanding'];
+    protected $appends = ['outstanding', 'credit_balance', 'returned_total'];
 
     public function customer()
     {
@@ -64,6 +64,28 @@ class Sale extends Model
 
     public function getOutstandingAttribute(): float
     {
-        return round((float) $this->grand_total - (float) $this->paid_total, 4);
+        return round(max(0, (float) $this->grand_total - (float) $this->paid_total - $this->getReturnedTotalAttribute()), 4);
+    }
+
+    public function getReturnedTotalAttribute(): float
+    {
+        if (array_key_exists('returns_total', $this->attributes)) {
+            return (float) $this->attributes['returns_total'];
+        }
+        if ($this->relationLoaded('returns')) {
+            return (float) $this->returns->where('status', 'posted')->sum('total');
+        }
+
+        return (float) $this->returns()->where('status', 'posted')->sum('total');
+    }
+
+    public function getCreditBalanceAttribute(): float
+    {
+        return round(max(0, (float) $this->paid_total + $this->getReturnedTotalAttribute() - (float) $this->grand_total), 4);
+    }
+
+    public function scopeWithReturnTotals($query)
+    {
+        return $query->withSum(['returns as returns_total' => fn ($query) => $query->where('status', 'posted')], 'total');
     }
 }

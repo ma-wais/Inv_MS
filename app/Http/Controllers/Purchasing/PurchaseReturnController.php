@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 
 class PurchaseReturnController extends Controller
 {
@@ -27,7 +28,7 @@ class PurchaseReturnController extends Controller
     public function create(Purchase $purchase): Response
     {
         return Inertia::render('Purchasing/Returns/Create', [
-            'purchase' => $purchase->load(['supplier', 'warehouse', 'items.variant.product.baseUnit']),
+            'purchase' => $purchase->load(['items' => fn ($query) => $query->withSum('returnItems as credited_total', 'line_total'), 'supplier', 'warehouse', 'items.variant.product.baseUnit']),
         ]);
     }
 
@@ -37,11 +38,15 @@ class PurchaseReturnController extends Controller
             'return_date' => ['required', 'date'],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.purchase_item_id' => ['required', 'integer'],
+            'items.*.purchase_item_id' => ['required', 'integer', 'distinct'],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
         ]);
 
-        $return = $purchaseService->createReturn($purchase, $validated, $validated['items']);
+        try {
+            $return = $purchaseService->createReturn($purchase, $validated, $validated['items']);
+        } catch (InvalidArgumentException $exception) {
+            return back()->withErrors(['items' => $exception->getMessage()]);
+        }
         $audit->record('purchase.return.created', $return, null, $return->toArray());
 
         return redirect()->route('purchases.show', $purchase)->with('status', 'Purchase return posted.');

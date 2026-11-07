@@ -47,22 +47,22 @@ export default function Create({ accounts }) {
 
             <div className="mx-auto max-w-2xl">
                 <div className="mb-4 flex items-center justify-between">
-                    <h1 className="text-xl font-bold text-slate-800">Create New Account</h1>
+                    <h1 className="text-xl font-bold text-foreground">Create New Account</h1>
                     <Link
                         href="/accounts"
-                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                        className="rounded-xl border border-line bg-surface px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-surface-muted transition-colors"
                     >
                         Back to Chart of Accounts
                     </Link>
                 </div>
 
                 {flash.status && (
-                    <div className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                    <div className="mb-5 rounded-xl bg-success-soft px-4 py-3 text-sm font-medium text-success-ink">
                         {flash.status}
                     </div>
                 )}
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
                     <form onSubmit={submit} className="space-y-5">
                         <SearchableSelect
                             id="parent_id"
@@ -130,20 +130,20 @@ export default function Create({ accounts }) {
                                 value={form.data.description ?? ''}
                                 onChange={(e) => form.setData('description', e.target.value)}
                                 placeholder=" "
-                                className="peer block w-full rounded-xl border border-slate-200 bg-white px-4 pb-2.5 pt-5 text-sm text-slate-800 outline-none transition-all focus:border-emerald-500 min-h-[80px]"
+                                className="peer block w-full rounded-xl border border-line bg-surface px-4 pb-2.5 pt-5 text-sm text-foreground outline-none transition-all focus:border-emerald-500 min-h-[80px]"
                             />
                             <label
                                 htmlFor="description"
-                                className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-slate-400 duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
+                                className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-subtle duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
                             >
                                 Description
                             </label>
-                            {form.errors.description && <p className="mt-1 text-xs text-red-600 font-normal">{form.errors.description}</p>}
+                            {form.errors.description && <p className="mt-1 text-xs text-danger-ink font-normal">{form.errors.description}</p>}
                         </div>
 
                         <button
                             disabled={form.processing}
-                            className="w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-60"
+                            className="w-full rounded-xl bg-action px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-60"
                         >
                             {form.processing ? 'Creating Account...' : 'Create Account'}
                         </button>

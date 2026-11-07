@@ -1,3 +1,4 @@
+import { today } from '../../../Components/utils';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '../../../Layouts/AuthenticatedLayout';
 import FloatingInput from '../../../Components/FloatingInput';
@@ -8,7 +9,7 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
         supplier_id: suppliers[0]?.id ?? '',
         warehouse_id: warehouses[0]?.id ?? '',
         supplier_invoice_number: nextSupplierInvoiceNumber ?? '',
-        purchase_date: new Date().toISOString().slice(0, 10),
+        purchase_date: today(),
         due_date: '',
         status: 'draft',
         discount_total: '0',
@@ -62,8 +63,8 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
             <Head title="New purchase" />
 
             <form onSubmit={submit} className="space-y-4">
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h2 className="font-semibold text-base text-slate-800 mb-4">Header Info</h2>
+                <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+                    <h2 className="font-semibold text-base text-foreground mb-4">Header Info</h2>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <SearchableSelect
                             label="Supplier"
@@ -111,9 +112,9 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
                     </div>
                 </section>
 
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="font-semibold text-base text-slate-800">Items</h2>
+                        <h2 className="font-semibold text-base text-foreground">Items</h2>
                         <button
                             type="button"
                             onClick={() => {
@@ -124,7 +125,7 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
                                     { product_variant_id: variants[0]?.id ?? '', quantity: '', unit_cost: '', batch_number: nextLineBatch, expires_at: '' }
                                 ]);
                             }}
-                            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
+                            className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold hover:bg-surface-muted transition-colors cursor-pointer"
                         >
                             + Add Line
                         </button>
@@ -133,7 +134,7 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
                     <div className="overflow-x-auto mt-4">
                         <table className="w-full text-left text-xs border-collapse">
                             <thead>
-                                <tr className="border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                <tr className="border-b border-line text-[10px] font-bold text-muted uppercase tracking-wider">
                                     <th className="py-2 pr-3 w-[35%]">Product & Variant</th>
                                     <th className="py-2 px-2 w-[12%]">Qty</th>
                                     <th className="py-2 px-2 w-[15%]">Cost (PKR)</th>
@@ -142,9 +143,9 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
                                     <th className="py-2 w-10"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-line-soft">
                                 {form.data.items.map((item, index) => (
-                                    <tr key={index} className="hover:bg-slate-50/50">
+                                    <tr key={index} className="hover:bg-surface-muted/50">
                                         <td className="py-2 pr-3">
                                             <SearchableSelect
                                                 id={`item-${index}-variant`}
@@ -165,7 +166,7 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
                                                 onChange={(e) => setItem(index, 'quantity', e.target.value)}
                                                 required
                                                 placeholder="Qty"
-                                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                                                className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs outline-none focus:border-emerald-500"
                                             />
                                         </td>
                                         <td className="py-2 px-2">
@@ -176,7 +177,7 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
                                                 onChange={(e) => setItem(index, 'unit_cost', e.target.value)}
                                                 required
                                                 placeholder="Cost"
-                                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                                                className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs outline-none focus:border-emerald-500"
                                             />
                                         </td>
                                         <td className="py-2 px-2">
@@ -185,7 +186,7 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
                                                 value={item.batch_number}
                                                 onChange={(e) => setItem(index, 'batch_number', e.target.value)}
                                                 placeholder="Batch #"
-                                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                                                className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs outline-none focus:border-emerald-500"
                                             />
                                         </td>
                                         <td className="py-2 pl-2">
@@ -193,14 +194,14 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
                                                 type="date"
                                                 value={item.expires_at}
                                                 onChange={(e) => setItem(index, 'expires_at', e.target.value)}
-                                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500"
+                                                className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs outline-none focus:border-emerald-500"
                                             />
                                         </td>
                                         <td className="py-2 text-right">
                                             <button
                                                 type="button"
                                                 onClick={() => form.setData('items', form.data.items.filter((_, i) => i !== index))}
-                                                className="rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                                className="rounded-lg border border-danger-ink/30 p-2 text-danger-ink hover:bg-danger-soft transition-colors cursor-pointer"
                                                 title="Remove Line"
                                             >
                                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -245,11 +246,11 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
                             value={form.data.notes}
                             onChange={(e) => form.setData('notes', e.target.value)}
                             placeholder=" "
-                            className="peer block w-full rounded-xl border border-slate-200 bg-white px-4 pb-2 pt-5 text-sm text-slate-800 outline-none transition-all focus:border-emerald-500 min-h-16"
+                            className="peer block w-full rounded-xl border border-line bg-surface px-4 pb-2 pt-5 text-sm text-foreground outline-none transition-all focus:border-emerald-500 min-h-16"
                         />
                         <label
                             htmlFor="notes"
-                            className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-slate-400 duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
+                            className="absolute left-4 top-2 z-10 origin-[0] -translate-y-0.5 scale-75 transform text-xs text-subtle duration-150 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:left-4 peer-focus:-translate-y-0.5 peer-focus:scale-75 peer-focus:text-emerald-500 cursor-text select-none uppercase font-semibold"
                         >
                             Notes
                         </label>
@@ -260,13 +261,13 @@ export default function Create({ suppliers, warehouses, variants, nextSupplierIn
                     <button
                         type="submit"
                         disabled={form.processing}
-                        className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors cursor-pointer"
+                        className="rounded-xl bg-action px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors cursor-pointer"
                     >
                         Save purchase
                     </button>
                     <Link
                         href="/purchases"
-                        className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold hover:bg-slate-50 transition-colors"
+                        className="rounded-xl border border-line bg-surface px-6 py-3 text-sm font-semibold hover:bg-surface-muted transition-colors"
                     >
                         Cancel
                     </Link>
